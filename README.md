@@ -4,7 +4,7 @@ This repository contains all of the LaTeX files for compiling my Thesis for my M
 
 ## Instructions
 
-The following instructions are written to compile the LaTeX files in order to produce the resulting `.pdf` file. The present version of the LaTeX files when compiled produce `Thesis_Jacob_Kruse.pdf` as it stands in the repository currently. 
+The following instructions are written to compile the LaTeX files and produce the resulting `.pdf` file. Compiling the present version of the LaTeX files will produce the current version of `Thesis_Jacob_Kruse.pdf`. 
 
 First, go to the `/perl` directory of this repository using File Explorer or with the command below.
 

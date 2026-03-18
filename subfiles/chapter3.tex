@@ -6,7 +6,7 @@
 
 \section{Contextual Bandit Framework}
 \label{Framework}
-The method in this paper was designed to be applied to a one-step, no horizon task, which is described in the Experiments \ref{Experiments} section. Because of this, we opt to utilize the contextual bandit \cite{Bandit} framework rather than the traditional Markov Decision Process \cite{MDP} framework. The two frameworks are very similar, but in the contextual bandit setting, there are no state transitions. Because of this, there is no transition function and only the immediate expected reward is considered rather than the sum of expected rewards.
+The method in this paper was designed to be applied to a one-step, no horizon task, which is described in the Experiments \ref{Experiments} section. Because of this, we opt to utilize the contextual bandit \parencite{Bandit} framework rather than the traditional Markov Decision Process \parencite{MDP} framework. The two frameworks are very similar, but in the contextual bandit setting, there are no state transitions. Because of this, there is no transition function and only the immediate expected reward is considered rather than the sum of expected rewards.
 
 The contextual bandit framework is formally defined by the following: there are a number of rounds $t$ from $t=1, 2, 3, ..., T$. For the set of possible contexts $\mathcal{X}$ there is a context vector $x_t \in \mathcal{X}$ to describe the current trial's context or state. There is also a set of arms or actions $\mathcal{A}(x_t)$, and the agent must choose one action $a_t \in \mathcal{A}(x_t)$ during each round. After executing the action, a reward $r_t$ is observed and determined by the reward function $r(x,a)$. In order to choose actions for each individual context, the agent implements a policy $\pi(a|x)$ or mapping from context to action. With a deterministic policy, each context results in a single action $a=\pi(x)$ with a probability of 1. For a deterministic policy represented by parameters $\phi$, the goal is to find a policy that maximizes the objective or expected reward
 
@@ -17,7 +17,7 @@ J(\phi) =
 \label{J}
 \end{equation}
 
-By repeatedly taking the gradient of the objective $\nabla_\phi J(\phi)$, the policy parameters can be continuously updated and push the policy towards optimality. The deterministic policy gradient from \cite{DPG} can then be defined by the following
+By repeatedly taking the gradient of the objective $\nabla_\phi J(\phi)$, the policy parameters can be continuously updated and push the policy towards optimality. The deterministic policy gradient from \parencite{DPG} can then be defined by the following
 
 \begin{equation}
 \nabla_\phi J(\phi) = 
@@ -46,7 +46,7 @@ The deterministic policy gradient can be estimated from executing the policy $\p
 
 As mentioned above, the observed reward $r_t$ obtained after taking action $a_t$ in context $x_t$ is determined by the reward function $r(x,a)$. In many practical settings, however,  the true reward function is unknown to the agent and must be inferred through interactions with the environment. One approach is to directly learn a policy from experience by utilizing importance sampling, but an alternative is to learn an approximate reward function $\hat r(x,a)$ and use this for policy optimization. For any exploration policy $\pi_{\text{Explore}}$, the agent observes tuples of the form $(x_t, a_t, r_t)$ where $x_t$ is the context, $a_t$ is the policy action $a_t\sim\pi_{\text{Explore}}(\cdot|x_t)$, and $r_t$ is the resulting reward. These interactions can be used to generate a dataset $\mathcal{D}=\{(x_b,a_b,r_b)\}_{b=1}^{\|\mathcal{D}\|}$. After populating the dataset, modeling the approximate reward function becomes a supervised learning problem. 
 
-For an approximate reward function $\hat{r_\theta}(x,a)$ with parameters $\theta$, the goal is predict the true reward of each context-action pair. To train this model, the aim is to minimize a loss function $\mathcal{L}(y,\hat y)$ which quantifies the discrepancy between true labels $y$ of input $x$ and predicted labels $\hat y$ from a function $f_\theta(x)$ \cite{19}. In the reward model setting, the loss function would be defined as $\mathcal{L}(r_b,\hat{r}_\theta(x_b,a_b))$, which measures how well the predicted reward matches the true observed reward. The optimal parameters $\theta$ are obtained by minimizing the loss over a mini-batch of size $B$ sampled from the dataset $\mathcal{D}$: 
+For an approximate reward function $\hat{r_\theta}(x,a)$ with parameters $\theta$, the goal is predict the true reward of each context-action pair. To train this model, the aim is to minimize a loss function $\mathcal{L}(y,\hat y)$ which quantifies the discrepancy between true labels $y$ of input $x$ and predicted labels $\hat y$ from a function $f_\theta(x)$ \parencite{19}. In the reward model setting, the loss function would be defined as $\mathcal{L}(r_b,\hat{r}_\theta(x_b,a_b))$, which measures how well the predicted reward matches the true observed reward. The optimal parameters $\theta$ are obtained by minimizing the loss over a mini-batch of size $B$ sampled from the dataset $\mathcal{D}$: 
 
 \begin{equation}
 \theta = 

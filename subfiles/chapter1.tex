@@ -2,19 +2,27 @@
 \begin{document}
 
 \chapter{Introduction}
-Reinforcement Learning (RL) has achieved remarkable success in simulation, where agents can execute many actions and easily evaluate rewards. For instance, \cite{SimGrasp} trains a robotic manipulator in simulation to perform a variety of manipulation tasks, while \cite{DeepQ} applies RL to teach an agent to play Atarti games. Recently, RL has been increasingly applied to real-world tasks, motivated by the desire to tackle challenging problems beyond simulation. For example, \cite{LegRL} demonstrates how a legged robot can learn to traverse real world terrains, and \cite{wu2023daydreamer} shows the application of their method to multiple physical platforms, including a quadruped robot, a robotic manipulator, and Sphero robot. Another prominent application of real-world RL is robotic grasping \cite{ManipSurvey}, due to its widespread relevance in manipulation tasks. However, practical deployment of RL in the real world faces several challenges. Uncertainty in sensing and actuation, high-dimensional continuous state and action spaces, the high cost of collecting large amounts of data, and the need to ensure safety during exploration all complicate the learning process.
-% These challenges motivate the development of methods that can learn effective policies from limited, noisy data while robustly executing learned tasks in real-world environments.
+Reinforcement Learning (RL) has achieved remarkable success in simulation, where agents can execute many actions and easily evaluate rewards. In simulated environments, large amounts of data can be generated quickly and safely, allowing policies to improve through extensive trial and error. For instance, \parencite{SimGrasp} trains a robotic manipulator in simulation to perform a variety of manipulation tasks, while \parencite{DeepQ} applies RL to teach an agent to play Atari games. These methods demonstrate the ability of RL algorithms to learn complex behaviors when there are large amounts of interaction data available to the agent. 
 
-Offline RL is a popular strategy for physical RL because it allows agents to learn from pre-colelcted datasets. This greatly improves the sample efficiency by enabling the algorithm to focus entirely on policy optimization rather than exploration. To address the main challenge of distribution shift in offline RL, techniques such as regularization and policy constraints are commonly applied. Regularization involves adding a term to the learning objective that encourages desirable behaviors in the learned policy, such as safer actions, improved exploration, or policy outputs that stay close to the data distribution. Similarly, Maximum Entropy Reinforcement Learning (MaxEnt RL) \cite{MaxEntRL} alters the standard RL objective by adding an entropy term to the reward. This encourages the policy to maximize both expected return and entropy, promting stochasticity in the policy,
-% The entropy term incentivizes broader action distributions, which improves exploration and can enhance robustness
-Although this resembles regularization with the additional term, MaxEnt RL fundamentally redefines the optimization objective. A notable example is Soft Actor-Critic (SAC) \cite{SAC}, which optimizes the MaxEnt objective. The method proposed in this work takes a similar approach by redefining the objective to include an additional term aimed at increasing action robustness.
+Recently, RL has been increasingly applied to real-world tasks, motivated by the desire to tackle challenging problems beyond simulation. For example, \parencite{LegRL} demonstrates how a legged robot can learn to traverse real world terrains, and \parencite{wu2023daydreamer} shows the application of their method to multiple physical platforms, including a quadruped robot, a robotic manipulator, and Sphero robot. Another prominent application of real-world RL is robotic grasping \parencite{ManipSurvey}, due to its widespread relevance in manipulation tasks such as warehouse automation and manufacturing. In these domains, robust grasping strategies are essential for practical deployment. 
+
+Despite this progress, the application of RL in the real world remains significantly more difficult than in simulation. The use of physical systems introduces uncertainty in sensing and actuation, while environmental factors introduce variability that further complicates learning. Additionally, robotic tasks often involve high-dimensional continuous state and action spaces, leading to challenges associated with the curse of dimensionality. Data collection is also costly and time-consuming, as it requires executing actions on physical hardware. Furthermore, safety must be considered to avoid damaging equipment or causing injury. These challenges make it difficult to apply traditional RL methods, which typically rely on large amounts of accurate data obtained through online interaction.
+
+Offline Reinforcement Learning is a popular strategy for addressing these limitations in physical systems. Offline RL methods learn policies entirely from pre-collected datasets without requiring additional environmental interaction during training. This greatly improves sample efficiency by enabling the algorithm to focus entirely on policy optimization rather than exploration. However, Offline RL introduces its own challenges, most notably distribution shift. Since the learned policy may select actions that differ from those present in the dataset, the value estimates for these actions cannot be evaluated reliably. 
+
+To mitigate this issue, many offline RL approaches incorporate techniques such as regularization and policy constraints. Regularization involves adding a term to the learning objective that encourages desirable behaviors in the learned policy, such as safer actions, improved exploration, or policy outputs that remain close to the collected data distribution. Incentivizing these behaviors can help stabilize training and reduce the risk or exploiting inaccuracies in value estimates. 
+
+Similarly, Maximum Entropy Reinforcement Learning (MaxEnt RL) \parencite{MaxEntRL} alters the standard RL objective by incorporating an entropy term to the reward. This encourages the policy to maximize both expected return and entropy, promoting stochasticity in the policy and encouraging broader action distributions. While this resembles regularization with the additional term, MaxEnt RL fundamentally redefines the optimization objective. A well-known example is Soft Actor-Critic (SAC) \parencite{SAC}, which optimizes the MaxEnt objective and has demonstrated strong performance in continuous control tasks. 
+
+% Needs to be edited, but waiting for final formulation. 
+Inspired by these approaches, this work proposes an alternative objective that promotes robustness in the selected actions. A policy that chooses actions that perform well in ideal conditions but fail in practice due to noise from imperfect actuation, sensing, or environmental disturbances is undesirable. Therefore, we encourage the policy to select actions that not only achieve high reward but also remain effective under small perturbations.
 
 \section{Contributions}
-In this paper, we introduce a framework that learns an approximate reward model and leverages it for iterative policy optimization with a novel robustness-oriented objective. Our approach is inspired by ideas from SAC and MaxEnt RL but adapts them to a contextual bandit setting suitable for grasping tasks. The main contributions of this work are:
+In this paper, we introduce a framework that learns an approximate reward model and leverages it for iterative policy optimization with a novel robustness-oriented objective. Our approach is inspired by ideas from Soft Actor-Critic and Maximum Entropy Reinforcement Learning. The data collection strategy helps provide a diverse dataset for learning an accurate initial reward model. By learning an approximate reward function, we are able to efficiently and accurately predict rewards for a large number of state-action pairs. Focusing on action robustness during optimization encourages policies that are more tolerant to perturbations in real-world execution. Finally iterative deployment allows the method to obtain on-policy data and evaluate the effectiveness of the converged policy before further improvement. The main contributions of this work are:
 
 \begin{itemize}
 
-    \item A new learning objective, the Maximum Action Noise Threshold (MaxANT), which encourages selection of actions that are both high-reward and robust to perturbations.
+    \item A new learning objective, the \textbf{I Don't Know Yet (IDKY)}, which encourages selection of actions that are both high-reward and robust to perturbations.
 
     \item Experiments demonstrating the method on a robotic sorting task, showing improved performance and robustness compared to standard policy optimization.
 
@@ -24,32 +32,21 @@ In this paper, we introduce a framework that learns an approximate reward model 
 
 \section{Thesis Structure}
 
+The remainder of this thesis is organized as follows:
+
 \begin{itemize}
 
-    \item \textbf{Chapter 2 - Related Work:} This chapter reviews the existing literature on Learning Grasp Success Models, Offline Reinforcement Learning, and Model-Based Reinforcement Learning, three similar areas of research and how they differ from this work.
+    \item \textbf{Chapter 2 - Related Work:} This chapter reviews prior work on Learning Grasp Success Models, Robust Reinforcement Learning, Offline Reinforcement Learning, and Model-Based Reinforcement Learning. While these areas share similarities with the proposed method, they differ from the approach presented in this work.
 
-    \item \textbf{Chapter 3 - Preliminaries:} This section details the foundational concepts that pertain to this approach. Section 3.1 defines the Contextual Bandit framework while Section 3.2 provides the basics of learning a reward model with supervised learning.
+    \item \textbf{Chapter 3 - Preliminaries:} This chapter introduces the foundational concepts necessary to understand the proposed method. Section 3.1 defines the $blank$ framework used to model the grasping problem, while Section 3.2 describes how reward models can be learned using supervised learning techniques.
 
-    \item \textbf{Chapter 4 - Methodolgy:} This chapter details the proposed method. Section 4.1 explains the strategies employed to learn an accurate reward model with an effective initial data collection strategy and with the use of ensemble networks to capture uncertainty. Section 4.2 lays out the main algorithm to learn a policy which utilizes the newly defined MaxANT objective and an iterative deployment of the policy for improvement.
+    \item \textbf{Chapter 4 - Methodolgy:} This chapter presents the proposed method in detail. Section 4.1 describes strategies used to learn an accurate reward model, including an effective data collection strategy and the use of ensemble networks capture uncertainty. Section 4.2 introduces the main algorithm for policy learning, which utilizes the newly defined IDKY objective and an iterative deployment strategy to progressively improve the the policy.
 
-    \item \textbf{Chapter 5 - Experiments:} This section explains the experiments that were conducted to evaluate the method. A robotic grasp experimental setup and the details are explained here.
+    \item \textbf{Chapter 5 - Experiments:} This chapter describes the experimental evaluation of the method. It includes details of the robotic grasping setup, datasets used, evaluation metrics, and results demonstrating the robustness of the proposed approach.
 
-    \item \textbf{Chapter 6 - Conclusion:} This final chapter summarizes the work and discusses the implications.
+    \item \textbf{Chapter 6 - Conclusion:} This final chapter summarizes the contributions of the thesis, discusses the implications of the results, and outlines posible directions for future work.
 
 \end{itemize}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-    % \chapter{Some Examples You May Need}
-    % This is where your content will go. There will be examples of figures, tables, citations, and footnotes/sidenotes in this section. In the source files, there will be examples and how to get them to appear on the TOC, LOF, and LOTs Some Diciplines use section and subsection headings more than others. The Chapter one is really all that matters. This is strictly to give the reader a sence of how they look on the TOC.
-    % \section{Your first section}
-    %   How do you feel so far? In these next few subsections we are going to be illustrating how to do these different things in LaTeX. Hopefully you will be able to replicate it whenever you need them.
-    %   It is good to have all of you images (figures) in their own folder so you can keep some organization to your projects.
-
-    %   \subsection{Table Example}
-    %     In this subsection, we are going to give an example of a table and how one will look. There are many ways to make a table and customize them. Here is one example:
-
 
     %   \begin{table}[ht]
     %     \centering
@@ -65,36 +62,5 @@ In this paper, we introduce a framework that learns an approximate reward model 
     %   \caption{The Caption of the table.}
     %   \label{table:someTable}
     %   \end{table}
-
-
-
-    %   \subsection{Figure Example}
-    %   This is going to be an example of how to insert an image and it's caption. We can also reference it anywhere else in the document as well.
-    %   \begin{figure}[h]
-    %     \centering\includegraphics[width=0.5\textwidth]{figures/digilab_logo}
-    %     \caption{The Digital Humanities Lab Logo}
-    %     \label{fig:digilogo}
-    %   \end{figure}
-    %   The Digital Humanities logo, figure ~\ref{fig:digilogo} is one of many different prototypes.
-
-      % \subsection{Equation Examples}
-      %   You can also reference an equation just like a figure and table. There are two different enviornments that are needed. The first is just using the equation enviornment. This is useful when you have one equation to write. As seen here:
-      %     \begin{equation*}
-      %       Y=\beta_{0} + \sum\limits_{i=1}^n \beta_{i}X_{i} + e
-      %     \end{equation*}
-      %   The equation for the general multiple linear regression model is above. This is a good use case for the equation enviornment. \LaTeX  knows to expect math symbols inside the enviornment. What if you need more than one line? What if each line need to align? Thats when the align enviornment comes in handy. A lot of the times, you will need to show the simplification of equations or steps in calcualtions.
-      %     \begin{center}
-      %       \begin{align*}
-      %         P_{s} &= \frac{D*F}{N*P*I}\\
-      %                       \\
-      %         &= \frac{D*R*W}{N*P*I} \text{  since } F=R*W\\
-      %                 \\
-      %         0.70 &= \frac{1*R*0.1}{2.5*1*4,294,967,295}\\
-      %                 \\
-      %        R &= 751619276625.0 \\
-      %        \\
-      %        A=\frac{R*0.1}{4096} &\implies A = 1835007.99
-      %      \end{align*}
-      %    \end{center}
 
 \end{document}

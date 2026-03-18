@@ -6,11 +6,14 @@ This repository contains all of the LaTeX files for compiling my Thesis for my M
 
 The following instructions are written to compile the LaTeX files and produce the resulting `.pdf` file. Compiling the present version of the LaTeX files will produce the current version of `Thesis_Jacob_Kruse.pdf`. 
 
-First, go to the `/perl` directory of this repository using File Explorer or with the command below.
+In order to compile, first clone this repository with the following command.
 
-    cd /perl 
+    git clone https://github.com/jacob-kruse/thesi_tex.git
 
-Run the Strawberry Perl shell by double clicking on `portableshell` in File Explorer or with the following command.
+After doing this, Strawberry Perl needs to be downloaded. To do so, download the `.zip` file at the following link. <br>
+[Strawberry Perl](https://strawberryperl.com/) 
+
+Extract the `.zip` file to a desired location and go to this directory using File Explorer or with the `cd` command in a terminal. Run the Strawberry Perl shell by double clicking on `portableshell` in File Explorer or with the following command.
 
     portableshell.bat
 
@@ -31,14 +34,7 @@ This will open a Command Prompt window with the following statement.
     Perl version   : v5.42.0 / MSWin32-x64-multi-thread
     PDL version    : 2.100
 
-If you see something similar to what is shown above, you have successfully started Strawberry Perl and are ready to compile the document with LaTeX. If this does not work, the third party code included in this repository may be out of date or not functioning correctly. To download Strawberry Perl go to the link below. <br>
-[Strawberry Perl](https://strawberryperl.com/)
-
-In the Strawberry Perl shell, go back to the `/thesi_tex` directory with the following command.
-
-    cd ..
-
-Then, compile the `Thesis_Jacob_Kruse.tex` file with the command below.
+If you see something similar to what is shown above, you have successfully started Strawberry Perl and are ready to compile the document with LaTeX. In the Strawberry Perl shell, go to the `/thesi_tex` directory with the `cd` command. Then, compile the `Thesis_Jacob_Kruse.tex` file with the command below.
 
     latexmk -pdf Thesis_Jacob_Kruse.tex
 
@@ -46,4 +42,8 @@ The command above compiles the file once and produces the `Thesis_Jacob_Kruse.pd
 
     latexmk -pdf -pvc Thesis_Jacob_Kruse.tex
 
-This causes the `Thesis_Jacob_Kruse.tex` file to compile automatically when any of the files are modified and saved.
+This causes the `Thesis_Jacob_Kruse.tex` file to compile automatically when any of the files are modified and saved. 
+
+If you run into issues, you can try to use the following command to clean the build directory before trying again.
+
+    latexmk -C

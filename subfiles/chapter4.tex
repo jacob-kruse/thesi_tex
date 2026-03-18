@@ -40,19 +40,18 @@ The predicted mean reward $\mu_\theta$ serves as the primary estimate of the app
 where the parameter $\beta$ controls the degree to which uncertainty is penalized. Larger values of $\beta$ will lead to more conservative reward approximations and will discourage the policy from selecting actions where the reward model is uncertain.
 
 \begin{algorithm}
-\caption{Train Reward Model Ensemble}
+\caption{Train Reward Ensemble}
 \label{alg:my_alg}
-\textbf{Inputs}: Dataset $\mathcal{D}$, number of reward networks $N$
+\textbf{Inputs:} Dataset $D$, Number of reward networks $N$
 \newline
-\textbf{Output}: Reward model $\tilde{r}_\theta(x,a)$
+\textbf{Output}: Reward model $\tilde{r}_\theta$
 \begin{algorithmic}[1]
 \State Initialize reward networks $\hat{r}_{\theta_1}, ..., \hat{r}_{\theta_N}$ with random parameters $\theta_1,..., \theta_N$
 \For{$t = 1$ to $T$}
-    \State {For each network $\hat r_{\theta_n}$, sample an independent 
-    \Statex \hspace{0.05\linewidth} mini-batch $B_n$ from dataset $\mathcal{D}$}
+    \State {For each network $\hat r_{\theta_n}$, sample an independent mini-batch $B_n$ from dataset $\mathcal{D}$}
     \State Update $\theta_{n} \gets \arg\min_{\theta_n}\frac{1}{B_n} \sum_{b=1}^{B_n}\mathcal{L}(r_b,\hat{r}_{\theta_n}(x_b,a_b))$
 \EndFor
-\State \Return $\tilde{r}_{\theta} (x,a)$
+\State \Return $\tilde{r}_{\theta}$
 \end{algorithmic}
 \end{algorithm}
 
@@ -70,52 +69,6 @@ The main contribution of this paper is a modified learning objective. In reinfor
 \end{equation}
 
 where
-
-%  \[
-% \mathcal{F}^-(x, a, \tau) = 
-% \max_{\boldsymbol{\delta}}\|\boldsymbol{\delta}\|_1
-% \hspace{0.75em} \text{s.t.} \hspace{0.75em} 
-% r(x, a - \boldsymbol{\delta}) \geq \tau
-% \]
-%  \[
-% \mathcal{F}^+(x, a, \tau) = 
-% \max_{\boldsymbol{\delta}}\|\boldsymbol{\delta}\|_1
-% \hspace{0.75em} \text{s.t.} \hspace{0.75em} 
-% r(x, a + \boldsymbol{\delta}) \geq \tau
-% \]
-
-% \begin{equation}
-% \label{F minus}
-% \begin{split}
-% \mathcal{F}^-(x, a, \tau) =
-% \max_{\boldsymbol{\Delta}} \|\boldsymbol{\Delta}\|_1
-% \ \text{s.t.} \\
-% \forall \boldsymbol{\delta} \in [0, \boldsymbol{\Delta}], \;
-% r(x, a - \boldsymbol{\delta}) \geq \tau
-% \end{split}
-% \end{equation}
-
-% \begin{equation}
-% \label {F plus}
-% \mathcal{F}^+(x, a, \tau) =
-% \max_{\boldsymbol{\Delta}} \|\boldsymbol{\Delta}\|_1
-% \hspace{0.75em} \text{s.t.} \hspace{0.75em}
-% \forall{\boldsymbol\delta}\leq\boldsymbol\Delta,
-% % \forall{\boldsymbol \delta} \in [0, \boldsymbol \Delta],
-% \;r(x, a + \boldsymbol{\delta}) \geq \tau
-% \end{equation}
-
-%%%%%%%%%%%%%% HERE IS OLD
-% \begin{equation}
-% \label{Max ANT Plus}
-% \begin{aligned}
-% \eta^+(x,a)
-% &= \max_{\boldsymbol{\Delta}} \|\boldsymbol{\Delta}\|_1 \\
-% &\text{such that} \quad
-% \forall \boldsymbol{\delta} \in [0, \boldsymbol{\Delta}], \;
-% r(x, a + \boldsymbol{\delta}) \geq \tau,
-% \end{aligned}
-% \end{equation}
 
 \begin{equation}
 \label{Max ANT Plus}
@@ -152,15 +105,23 @@ r(x, \mathbf{a} + \boldsymbol{\delta}) \geq r(x,\mathbf{a}),
 \end{aligned}
 \end{equation}
 
+% \begin{equation}
+% \label{Max ANT Minus}
+% \begin{aligned}
+% \eta^-(x,a)
+% &= \max_{\boldsymbol{\Delta}} \|\boldsymbol{\Delta}\|_1 \\
+% &\text{such that} \quad
+% \forall \boldsymbol{\delta} \in [0, \boldsymbol{\Delta}], \; 
+% r(x, \mathbf{a} - \boldsymbol{\delta}) \geq \tau.
+% \end{aligned}
+% \end{equation}
+
 \begin{equation}
-\label{Max ANT Minus}
-\begin{aligned}
-\eta^-(x,a)
-&= \max_{\boldsymbol{\Delta}} \|\boldsymbol{\Delta}\|_1 \\
-&\text{such that} \quad
-\forall \boldsymbol{\delta} \in [0, \boldsymbol{\Delta}], \; 
-r(x, \mathbf{a} - \boldsymbol{\delta}) \geq \tau.
-\end{aligned}
+\label{NEWEST MAXANT}
+\eta(x,a) = 
+% \int_{-\delta_{l}}^{\delta_{l}}
+\int
+r(x,a+\delta) \ d\delta
 \end{equation}
 
 Intuitively, $\eta(x,a)$ measures the maximum positive and negative perturbation $\Delta$ that can be applied to action $a$ without the reward falling below the reward threshold $\tau \in [r_{\text{min}}, r_{\text{max}}]$. This function is incorporated into the standard objective and is multiplied by the hyperparameter $\alpha$ to produce the modified objective
@@ -192,38 +153,32 @@ which can be approximated by
 \cdot \nabla_a\big(r(x_b,a_b) + \alpha \cdot \eta(x_i,a_i)\big) |_{a_i=\pi_\phi(x_i)}.
 \end{equation}
 
-where $B$ represents the batch size of the sampled states. 
+where $B$ represents the batch size of the sampled states. The above is an unbiased Monte Carlo estimator for the true objective. The true objective is an expectation over the possible states, but this is hard to estimate, so instead, the sampling provides an approximation of this expectation.
 
 \subsection{Iterative Deployment of Trained Policy}
 After training the policy with the modified objective described above, the learned policy $\pi_\phi$ is deployed in the real world to generate a dataset $\mathcal{D}_{\pi_\phi}$. Since the learned policy $\mathcal{D}_{\pi_\phi}$ is deterministic, Gaussian noise is added to the continuous actions during its deployment to evaluate its robustness. Once collected, $\mathcal{D}_{\pi_\phi}$ is merged with the existing dataset to form $\mathcal{D}_{i+1} = \mathcal{D}_i \ \cup \ \mathcal{D}_{\pi_\phi}$. The resulting dataset now contains a mixture of random exploration, expert, and on-policy data, increasing overall diversity. The new dataset is subsequently used to retrain the reward model, which in turn is used to further optimize the policy. By augmenting the dataset with on-policy samples, the reward model is refined in regions of the state-action space that are most relevant to the current policy. This helps correct suboptimal policy convergence that may arise from optimizing with an imperfect reward model though evaluation with real world interactions. The full algorithm is presented in Figure \ref{Overall Algorithm} and Algorithm \ref{alg:my_alg}.
 
 \begin{figure}[h]
-\centering\includegraphics[width=0.5\textwidth]{figures/Overall Algorithm KUKA.png}
-\caption{Overall Algorithm}
+\centering\includegraphics[width=0.75\textwidth]{figures/My RL.png}
+\caption{Iterative Reward Model and Policy Training. An exploration policy $\pi_\beta$ and expert policy $\pi_E$ interact with the environement to collect state-action-reward tuples, which are stored in the initial dataset $\mathcal{D}$. This dataset is used to train an approximate reward model $\tilde{r}_i$, which guides the optimization of a policy $\pi_i$. The learned policy $\pi_i$ is deployed in the environment to generate on-policy data and adds it to the dataset $\mathcal{D}$. The reward model $\tilde{r}_{i+1}$ is updated with the augmented dataset, and a new policy $\pi_{i+1}$ is optimized. This process repeats iteratively, progressively improving the reward model and policy.}
 \label{Overall Algorithm}
 \end{figure}
 
-\begin{figure}[h]
-\centering\includegraphics[width=0.5\textwidth]{figures/Overall Algorithm Basic.png}
-\caption{Overall Algorithm Basic}
-\label{Overall Algorithm Basic}
-\end{figure}
-
 \begin{algorithm}
-\caption{Iterative Policy Improvement with MaxANT RL}
+\caption{Policy Optimization}
 \label{alg:my_alg}
-\textbf{Inputs}: Number of reward networks $N$, action noise threshold $\tau$, action noise threshold rate $\alpha$
+\textbf{Inputs}: Number of reward networks $N$, Rate $\alpha$
 \newline
 \textbf{Output}: Policy $\pi_\phi$
 \begin{algorithmic}[1]
 \State Initialize policy network $\pi_\phi$ with random parameters $\phi$
-\State Fill initial dataset $\mathcal{D}_0$ with data from random exploration policy $\pi_\text{Random}$ and from expert policy $\pi_\text{Expert}$
+\State Fill initial dataset $\mathcal{D}_0$ with data from exploration policy $\pi_\beta$ and from expert policy $\pi_E$
 \For{$i = 0$ to $I$}
-    \State $\tilde{r}_{\theta}(x,a) \gets$ TrainRewardModel$(\mathcal{D}_i,N)$
+    \State $\tilde{r}_{\theta} \gets$ TrainRewardModel$(\mathcal{D}_i,N)$
     \For{$t = 1$ to $T$}
         \State Sample mini-batch of size $B$ from dataset $\mathcal{D}_i$
-        \State \makebox[\linewidth][l]{$\nabla_\phi J(\phi) =  \frac{1}{B} \sum_{b=1}^{B}\nabla_\phi \pi_\phi(x_b) \cdot \nabla_a\big(\tilde{r}(x_b,a_b) + \alpha \cdot \eta(x_b,a_b)\big) |_{a_i=\pi_\phi(x_b)}$}
-        \State Update $\phi$ using Equation \ref{Aproximate New Policy Gradient}
+        \State Update $\phi$: \makebox[\linewidth][l]{$\nabla_\phi J(\phi) =  \frac{1}{B} \sum_{b=1}^{B}\nabla_\phi \pi_\phi(x_b) \cdot \nabla_a\big(\tilde{r}_{\theta}(x_b,a_b) + \alpha \cdot \eta(x_b,a_b)\big) |_{a_b=\pi_\phi(x_b)}$}
+        % \State Update $\phi$ using Equation \ref{Aproximate New Policy Gradient}
     \EndFor
     \State Execute $\pi_{\phi_i}$ and add interactions to $\mathcal{D}_{\pi_{\phi_i}}$
     \State Update dataset $\mathcal{D}_{i+1}=\mathcal{D}_i \cup \mathcal{D}_{\pi_{\phi_i}}$
@@ -231,5 +186,34 @@ After training the policy with the modified objective described above, the learn
 \State \Return $\pi_\phi$
 \end{algorithmic}
 \end{algorithm}
+
+% \begin{algorithm}
+% \caption{Policy Optimization}
+% \label{alg:my}
+% \textbf{Inputs}: Initial dataset $\mathcal{D}_0$, $\:$ Number of reward networks $N$, $\:$ rate $\alpha$
+% % \textbf{Inputs}: 
+% % \begin{tabular}[t]{@{}l}
+% % Initial dataset $\mathcal{D}_0$ \\
+% % Number of reward networks $N$ \\
+% % rate $\alpha$
+% % \end{tabular}
+% \newline
+% \textbf{Output}: Policy $\pi_\phi$
+% \begin{algorithmic}[1]
+% \State Initialize policy network $\pi_\phi$ with random parameters $\phi$
+% \For{$i = 0$ to $I$}
+%     \State $\tilde{r}_{\theta} \gets$ TrainRewardModel$(\mathcal{D}_i,N)$
+%     \For{$t = 1$ to $T$}
+%         \State Sample mini-batch of size $B$ from dataset $\mathcal{D}_i$
+%         \State Update $\phi$: \makebox[\linewidth][l]{$\nabla_\phi J(\phi) =  \frac{1}{B} \sum_{b=1}^{B}\nabla_\phi \pi_\phi(x_b) \cdot \nabla_a\big(\tilde{r}_{\theta}(x_b,a_b) + \alpha \cdot \eta(x_b,a_b)\big) |_{a_b=\pi_\phi(x_b)}$}
+%         % \State Update $\phi$: \makebox[\linewidth][l]{$\nabla_\phi J(\phi) =  \frac{1}{B} \sum_{b=1}^{B}\nabla_\phi \pi_\phi(s_b) \cdot \nabla_a\big(\tilde{r}_{\theta}(s_b,a_b) + \alpha \cdot \eta(s_b,a_b)\big) |_{a_b=\pi_\phi(s_b)}$}
+%         % \State Update $\phi$ using Equation \ref{Aproximate New Policy Gradient}
+%     \EndFor
+%     \State Execute $\pi_{\phi_i}$ and add interactions to $\mathcal{D}_{\pi_{\phi_i}}$
+%     \State Update dataset $\mathcal{D}_{i+1}=\mathcal{D}_i \cup \mathcal{D}_{\pi_{\phi_i}}$
+% \EndFor
+% \State \Return $\pi_\phi$
+% \end{algorithmic}
+% \end{algorithm}
 
 \end{document}

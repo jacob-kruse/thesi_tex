@@ -22,18 +22,17 @@ The proposed task is to autonomously sort recyclable items within a constrained 
 \begin{algorithmic}[1]
 \While {items in workspace}
     \State Camera obtains state $s$ and encodes it as $s_\phi$
-    \State Robot moves to ``Home" position
-    \State Get policy action  $a \gets \pi_\phi(s_\phi)$
-    \State Robot executes the policy action 
+    \State Robot moves to "Home" position
+    \State Robot executes policy action $a \gets \pi_\phi(s_\phi)$
     \State Robot closes gripper to grab item
-    \State Robot moves to ``Bin" position
+    \State Robot moves to "Bin" position
     \State Robot opens gripper to drop item
 \EndWhile
 \end{algorithmic}
 \end{algorithm}
 
 \section{Context/State Estimation}
-The workspace state is obtained from an overhead RGBD camera. When the current state is requested, the camera captures an RGB and a corresponding depth image of the workspace. The RGB image is passed though a YOLO v11 instance segmentation model to acquire pixle-wise masks of bottles and cans present in the scene. The YOLO model was trained on a combination of publicly available datasets containing annotated images of general cans and bottles, along with custom images collected from the workspace with manual annotation. After obtaining the segmented instances, Principal Component Analysis (PCA) \cite{21} is performed on each mask to compute the centroid and principal axis of the objects. 
+The workspace state is obtained from an overhead RGBD camera. When the current state is requested, the camera captures an RGB and a corresponding depth image of the workspace. The RGB image is passed though a YOLO v11 instance segmentation model to acquire pixle-wise masks of bottles and cans present in the scene. The YOLO model was trained on a combination of publicly available datasets containing annotated images of general cans and bottles, along with custom images collected from the workspace with manual annotation. After obtaining the segmented instances, Principal Component Analysis (PCA) \parencite{21} is performed on each mask to compute the centroid and principal axis of the objects. 
 %
 % PCA provides the dominant direction of variance in the mask, which corresponds to the object's primary geometric axis in the image plane.
 %
@@ -44,19 +43,25 @@ The corresponding depth image is then used to recover the 3D position of the cen
     \begin{minipage}[c]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figures/OG Bottles and Cans.png}
+        \subcaption{}
+        \label{OG}
     \end{minipage}
     \hspace{0.01\textwidth}
     \begin{minipage}[c]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figures/Masks.png}
+        \subcaption{}
+        \label{Masks}
     \end{minipage}
     \hspace{0.01\textwidth}
     \begin{minipage}[c]{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figures/PCA.png}
+        \subcaption{}
+        \label{PCA}
     \end{minipage}
-    \caption{YOLO}
-    \label{fig:workspace}
+    \caption{State Estimation. Figure~\ref{OG} shows the original RGB image. This image is passed through a YOLO v$11$ instance segmentation model to obtain masks of the bottles and cans, as shown in Figure~\ref{Masks}. Principal Componet Analysis (PCA) is performed on the masks to determine the centroid and principal axes, shown in Figure~\ref{PCA}}
+    \label{State Estimation}
 \end{figure}
 
 \begin{figure}[h]
@@ -131,7 +136,7 @@ where $q \in \{ 1,2,3,4 \}$ denotes the spatial quadrant of the object, $w \in \
 \end{figure}
 
 \section{Action Definition}
-The actions for the sorting task define how the robotic manipulator moves prior to attempting a grasp. Each action specifies a desired relative displacement of the tool center point (TCP), i.e., the center of the gripper, with respect to the current object pose. To execute an action, the robot computes an inverse kinematics \cite{22} solution and plans a motion to the specified pose. The action is 6-dimensional, continuous, and is defined by the following 
+The actions for the sorting task define how the robotic manipulator moves prior to attempting a grasp. Each action specifies a desired relative displacement of the tool center point (TCP), i.e., the center of the gripper, with respect to the current object pose. To execute an action, the robot computes an inverse kinematics \parencite{22} solution and plans a motion to the specified pose. The action is 6-dimensional, continuous, and is defined by the following 
 
 \[
 a = [\Delta l, \Delta w, \Delta h, \Delta \varphi, \Delta \vartheta, \Delta \psi]
@@ -157,7 +162,7 @@ Although the policy outputs a relative action, execution requires an absolute po
 \section{Reward Definition}
 Rewards are assigned autonomously to each action executed in the workspace. The reward is binary: actions that result in a successful grasp receive a reward of 1, while unsuccessful actions receive a reward of 0. Action success is determined using two criteria: a reduction in the total workspace items, and the measured current load of the gripper. If the number of items in the workspace decreases by one following the action and gripper current exceeds 150 mA, the action is classified as successful and assigned a reward of 1. Otherwise, the action is classified as a failure and assigned a reward of 0. This dual-condition check ensures that grasp attempts that fail to grab the object are not incorrectly labeled as successful.
 
-To train the reward model, Binary Cross-Entropy (BCE) loss is used. Cross-Entropy loss \cite{20} is widely used for probability models and classification tasks. Because the reward data takes on one of two labels (0 or 1), the binary variant of Cross-Entropy is appropriate. The Binary Cross-Entropy is defined as
+To train the reward model, Binary Cross-Entropy (BCE) loss is used. Cross-Entropy loss \parencite{20} is widely used for probability models and classification tasks. Because the reward data takes on one of two labels (0 or 1), the binary variant of Cross-Entropy is appropriate. The Binary Cross-Entropy is defined as
 
 \[
 \mathcal{L}_{BCE}(\theta) =

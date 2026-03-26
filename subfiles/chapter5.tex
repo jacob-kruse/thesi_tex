@@ -4,15 +4,16 @@
 \chapter{Experiments}
 \label{Experiments}
 
-To evaluate the proposed method, experiments were done on a sorting task with a robotic manipulator. The following experiments are the main contributions of this paper. 
+To evaluate the proposed method, experiments were done on a sorting task for recyclable items with a robotic manipulator. The following experiments are the main contributions of this paper. 
+% Add something about metrics evaluated 
 
 \section{Task Description}
-The proposed task is to autonomously sort recyclable items within a constrained workspace. The item set consists of aluminum cans and plastic bottles with varying degrees of deformation, which introduces variability in shape and grasp difficulty. The manipulation is performed with a KUKA LBR iisy 3 r760 collaborative robot fitted with an Ubiros Gentle Pro gripper at the end effector. The workspace state is captured using an overhead Oak-D S2 RGBD camera and subsequently encoded to form the input to the learned policy, which outputs the corresponding control action for the manipulator. After executing the action, the robot automatically closes the gripper, moves to the recycling bin, and opens the gripper to release any grasped object. An action is considered successful if the assigned object is grasped and transported to the recycling bin. The overall sorting procedure is summarized in Algorithm \ref{Sorting Loop}.
+The proposed task is to autonomously sort recyclable items within a constrained workspace. The item set consists of aluminum cans and plastic bottles with varying degrees of deformation, which introduces variability in shape and grasp difficulty. The object manipulation is performed with a KUKA LBR iisy 3 r760 collaborative robotic arm equipped with an Ubiros Gentle Pro gripper at the end effector. The context of the workspace is captured using an overhead Oak-D S2 RGB-D camera, which provides synchronized color and depth images of the scene. These images are processed and encoded to form the input to the learned policy. The policy outputs continuous control actions for the manipulator, specifying the relative end effector placement. After executing the policy action with the corresponding motion trajectory, the robot automatically closes the gripper to secure the object, moves to the recycling bin, and opens the gripper to release any grasped object. An action is considered successful if the robot is able to securely grasp the assigned object and transport it to the recycling bin. The experimental setup is illustrated in Figure \ref{Workspace} and the overall sorting procedure is summarized in Algorithm \ref{Sorting Loop}.
 
 \begin{figure}[h]
 \centering\includegraphics[width=0.375\textwidth]{figures/Workspace Labeled.png}
-\caption{Workspace}
-\label{Local Axis}
+\caption{Experimental Setup. A KUKA robotic manipulator is used to grab aluminum cans and plastic bottles located on a conveyor belt. An Oak-D RGB-D camera captures images of the scene, from which the 3D position and orientation of each item is calculated. With this information, the manipulator executes grasping actions to move the recyclable items to a recycling bin}
+\label{Workspace}
 \end{figure}
 
 \begin{algorithm}
@@ -21,9 +22,11 @@ The proposed task is to autonomously sort recyclable items within a constrained 
 \textbf{Input}: Learned policy $\pi_\phi$
 \begin{algorithmic}[1]
 \While {items in workspace}
-    \State Camera obtains state $s$ and encodes it as $s_\phi$
+    \State Camera captures RGB and Depth images of the workspace
+    \State Process images to obtain context $x$ and encoded context $\hat{x}$
     \State Robot moves to "Home" position
-    \State Robot executes policy action $a \gets \pi_\phi(s_\phi)$
+    \State Determine action from policy: $a \gets \pi_\phi(\hat{x})$
+    \State Robot executes action $a$ by moving to relative end effector position
     \State Robot closes gripper to grab item
     \State Robot moves to "Bin" position
     \State Robot opens gripper to drop item
@@ -31,12 +34,14 @@ The proposed task is to autonomously sort recyclable items within a constrained 
 \end{algorithmic}
 \end{algorithm}
 
-\section{Context/State Estimation}
-The workspace state is obtained from an overhead RGBD camera. When the current state is requested, the camera captures an RGB and a corresponding depth image of the workspace. The RGB image is passed though a YOLO v11 instance segmentation model to acquire pixle-wise masks of bottles and cans present in the scene. The YOLO model was trained on a combination of publicly available datasets containing annotated images of general cans and bottles, along with custom images collected from the workspace with manual annotation. After obtaining the segmented instances, Principal Component Analysis (PCA) \parencite{21} is performed on each mask to compute the centroid and principal axis of the objects. 
-%
-% PCA provides the dominant direction of variance in the mask, which corresponds to the object's primary geometric axis in the image plane.
-%
-The corresponding depth image is then used to recover the 3D position of the centroid. Using camera intrinsics, ray projection, and ROS2 coordinate frame transformations, the centroid is transformed into the robot's frame. The principal axis extracted from PCA defines the object's yaw angle in the robot frame. To estimate the pitch angle, a two-point method is employed. Two points located near opposite ends of the object along the principal axis are strategically chosen. Like the centroid, the 3D position of these points are computed in the robot frame using the depth image. Let the vertical change between the two points be $\Delta z$, and let the planar displacement be in the $xy$-plane be $\Delta xy$. The pitch angle is then computed by $\vartheta=\arctan{\frac{\Delta z}{\Delta xy}}$. Due to the axial symmetry of bottles and cans, the roll angle is assumed to be zero. Therefore, the full 6D pose of each object is defined by the 3D position of the centroid and the estimated pitch and yaw angles.
+\section{Context Estimation}
+The context of the workspace is obtained using images from an overhead RGB-D camera. When the current context is requested, the camera captures an RGB image and a corresponding depth image of the workspace. The RGB image is passed through a YOLO v11 instance segmentation model, which produces pixel-wise masks of the aluminum cans and plastic bottles present in the scene. The YOLO model was trained on a combination of publicly available datasets containing annotated images of general cans and bottle, as well as a custom dataset containing images collected directly from the workspace with manual annotation. Incorporating general and task-specific data enables the model to generalize and maintain accuracy for specific objects with the instance segmentation procedure. 
+
+After obtaining the segmented instances from the RGB image, Principal Component Analysis (PCA) \parencite{PCA} is performed on the mask of each item. PCA provides an efficient method to calculate different geometric properties from the object masks, and is first utilized to compute the centroid. The centroid represents the average position of all the pixels in the object mask, effectively providing a 2D estimate of the object's center in the image plane. In addition to the centroid, PCA is utilized to calculate the principal axis of each mask, which is used to indicate the orientation of the each object in the image. Figure \ref{State Estimation} provides a visual overview of this process, showing the initial RGB image, the extracted object masks, and the result of the PCA analysis on each mask.
+
+The corresponding depth image is then used to recover the 3D position of the centroid from its 2D location in the image. Using the camera intrinsics and a standard pinhole model, the pixel corresponding to the centroid can be projected along a 3D ray. The depth value at the centroid's pixel represents the distance along this ray, allowing the computation of the object's centroid relative to the camera. This 3D position is transformed from the camera's local coordinate frame to the robot's global coordinate frame using ROS2 transformations. 
+
+The principal axis obtained from PCA defines the object's yaw angle in the robot frame. However, for a complete 6D pose representation, the pitch angle must also be estimated. To compute the pitch, a two-point method is employed. Two points are selected near opposite ends of the object along the principal axis. The 3D positions of these points are recovered from the depth image using the same strategy applied to the centroid. Let the vertical difference between the two points be $\Delta z$, and let the planar displacement in the $xy$-plane be $\Delta xy$. The pitch angle is then computed by $\vartheta=\arctan{\frac{\Delta z}{\Delta xy}}$, which provides a measure of the object's incline relative to the workspace plane. Due to assumed axial symmetry of the bottles and cans, the roll angle is assumed to be zero. Therefore, the full 6D pose of the each object is defined by the 3D position of the centroid and the estimated pitch and yaw angles.
 
 \begin{figure}[h]
     \centering
@@ -60,89 +65,83 @@ The corresponding depth image is then used to recover the 3D position of the cen
         \subcaption{}
         \label{PCA}
     \end{minipage}
-    \caption{State Estimation. Figure~\ref{OG} shows the original RGB image. This image is passed through a YOLO v$11$ instance segmentation model to obtain masks of the bottles and cans, as shown in Figure~\ref{Masks}. Principal Componet Analysis (PCA) is performed on the masks to determine the centroid and principal axes, shown in Figure~\ref{PCA}}
+    \caption{Context Estimation. Figure~\ref{OG} shows the original RGB image. This image is passed through a YOLO v$11$ instance segmentation model to obtain masks of the bottles and cans, as shown in Figure~\ref{Masks}. Principal Componet Analysis (PCA) is performed on the masks to determine the centroid and principal axes, shown in Figure~\ref{PCA}}
     \label{State Estimation}
 \end{figure}
 
-\begin{figure}[h]
-\centering\includegraphics[width=0.5\textwidth]{figures/Local Axis.png}
-\caption{Local Axis}
-\label{Local Axis}
-\end{figure}
-
-\section{Context/State Definition}
-Because the number of items in the workspace varies and the robot grasps one item at a time, only the 6D pose of a single target is considered in the state representation. The state captures the 3D position and orientation of the current object selected for grasping, along with contextual information about the workspace. The state is defined as: 
+\section{Context Definition}
+Because the robot focuses on grasping one item at a time, the context representation only includes the 6D pose of the selected target. This approach greatly reduces the context space by concentrating on the object that is relevant for the current grasping action, rather than including the positions and orientations of all other objects, which is difficult when the number of items is dynamic. Therefore, the context captures the position and orientation of the active object in 3D space, along with basic contextual information about the scene. Formally the context is defined as:
 
 \[
-s=[x, y, z, \vartheta, \psi, t,n]
+\mathbf{x}=[x , y, z, \omega, \psi, t, n],
 \]
 
-% \[
-% x=[\text{x} , \text{y}, \text{z}, \vartheta, \psi, t,n]
-% \]
+where $x,y,z \in \mathbb{R}$ represent the Eucledian coordinates of the object's centroid, $\omega$ and $\psi$ denote the pitch and yaw angles describing the object's orientation, $t$ represents the object type (e.g., can or bottle), and $n$ denotes the number of objects currently present in the scene. Information about the object type $t$ is necessary as the geometry of aluminum cans and plastic bottles differs. 
 
-where $x,y,z \in \mathbb{R}$ represent the Eucledian coordinates of the object's centroid, 
-% where x, y, z $\in \mathbb{R}$ represent the eucledian coordinates of the object's centroid,
-$\vartheta$ and $\psi$ denote the pitch and yaw angles desribing the object's orientation, $t$ represents the object type (e.g., can or bottle), and $n$ denotes the number of objects currently present in the scene. Thus, the state respresents the 6D pose of the active object and basic scene-level information. Due to the physical constraints of the workspace, the following bounds are imposed on the state variables: 
+Due to the physical constraints of the workspace, the following bounds are imposed on the context variables: 
 
 \[
 \begin{gathered}
 x \in [0.20, 0.55], \
 y \in [-0.35, 0.35], \
 z \in [0.80, 0.95],  \\
-\vartheta \in [-\frac{\pi}{2}, 0], \
-\psi \in [-\pi, \pi]
+\omega \in [-\frac{\pi}{2}, 0], \
+\psi \in [-\pi, \pi].
 \end{gathered}
 \]
 
-Because the true state space is continuous, there are infinitely many possible states. To significantly reduce the size of the state space for the reward and policy networks, a discretized encoding is introduced. First, the workspace is divided into two equal partitions along the $x$ and $y$ axes, producing four spatial quadrants. Then, the pitch angle $\vartheta$ range is divided into three uniform bins, and the yaw angle $\psi$ range is divided into four uniform bins. The object type $t$ is preserved, while the number of objects $n$ is removed from the discretized representation. The resulting encoded state is defined as:
+These bounds ensure that the context representation includes only feasible poses, preventing the robot from considering impossible positions or orientations during planning or learning.
+
+Because the true context space is continuous, there are infinitely many possible contexts. To significantly reduce the size of the context space for the reward and policy networks, a discretized encoding is introduced. The workspace is first divided into two equal partitions along the $x$ and $y$ axes, producing four spatial quadrants. Each object is assigned a quadrant based on the position of its centroid, compressing all possible continuous $x$ and $y$ values into four discrete values. Then, the pitch angle $\omega$ range is divided into three uniform bins, and the yaw angle $\psi$ range is divided into four uniform bins. Like the quadrant representation, the pitch and yaw bins compress the context representation into a coarse but still meaningful form. The object type $t$ is preserved in the discretized context to maintain the distinction between different recyclable items, while the number of objects $n$ is removed to simplify the encoding and because only a single target is considered.
+
+The resulting discretized state is compactly defined as:
 
 \[
-\hat s = [q,w,v,t],
+\mathbf{\hat{x}} = [q, \Omega, \Psi, t],
 \]
 
-% \[
-% \hat x = [q,w,s,t],
-% \]
-
-where $q \in \{ 1,2,3,4 \}$ denotes the spatial quadrant of the object, $w \in \{ 1,2,3 \}$ represents the discretized pitch bin, $v \in \{ 1,2,3,4 \}$ denotes the discretized yaw bin, and $t$ represents the object type. This encoding reduces the continuous state to a compact representation suitable for reward modeling and policy learning.
-
-% \begin{figure}[h]
-%     \centering
-%     \includegraphics[width=0.48\textwidth]{figures/Quadrants.png}
-%     \hspace{0.02\textwidth} % small space between images
-%     \includegraphics[width=0.48\textwidth]{figures/Slices.png}
-%     \includegraphics[width=0.5\textwidth]{figures/Sectors.png}
-%     \caption{Discretized Workspace}
-%     \label{fig:workspace}
-% \end{figure}
+where $q \in \{ 1,2,3,4 \}$ denotes the spatial quadrant of the object, $\Omega \in \{ 1,2,3 \}$ represents the discretized pitch bin, $\Psi \in \{ 1,2,3,4 \}$ denotes the discretized yaw bin, and $t$ represents the object type. This encoding provides a simplified yet informative summary of the object and reduces the continuous context to a compact representation that is suitable for reward modeling and policy learning. Figure \ref{Discretized Workspace} shows the discretized workspace along with an example of an item mapped to the corresponding quadrant and orientation bins.
 
 \begin{figure}[h]
     \centering
-    \begin{minipage}[c]{0.49\textwidth} % [c] centers vertically
+    \begin{minipage}[c]{0.49\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figures/Quadrants.png}
+        \subcaption{}
+        \label{Quadrants}
     \end{minipage}
-    \hspace{0.01\textwidth} % small gap
-    \begin{minipage}[c]{0.49\textwidth} % [c] centers vertically
+    \hspace{0.01\textwidth}
+    \begin{minipage}[c]{0.49\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figures/Slices.png}
+        \subcaption{}
+        \label{Yaw Bin}
     \end{minipage}
-    % \vspace{1.5cm}
     \\[0.25cm]
-    \includegraphics[width=0.5\textwidth]{figures/Sectors.png}
-    \caption{Discretized Workspace}
-    \label{fig:workspace}
+    \begin{minipage}[c]{0.5\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/Sectors.png}
+        \subcaption{}
+        \label{Pitch Bin}
+    \end{minipage}
+    \caption{Discretized Workspace: Figure~\ref{Quadrants} shows the xy-plane of the workspace divided into four quadrants. In this example, the bottle is located in the second quadrant. Figure~\ref{Yaw Bin} illustrates the discretization of the possible yaw angles into four bins; the bottle falls within the first bin in this example. Similarly, the possible pitch angles are discretized into three bins, with the bottle located in the first bin, as shown in Figure~\ref{Pitch Bin}.}
+    \label{Discretized Workspace}
 \end{figure}
 
 \section{Action Definition}
-The actions for the sorting task define how the robotic manipulator moves prior to attempting a grasp. Each action specifies a desired relative displacement of the tool center point (TCP), i.e., the center of the gripper, with respect to the current object pose. To execute an action, the robot computes an inverse kinematics \parencite{22} solution and plans a motion to the specified pose. The action is 6-dimensional, continuous, and is defined by the following 
+The actions for the sorting task define how the robotic manipulator moves prior to attempting a grasp. Each action specifies a desired relative displacement of the tool center point (TCP), i.e., the center of the gripper, with respect to the current object pose. To execute an action, the robot computes an inverse kinematics \parencite{IK} solution and plans a motion to the specified pose. The action is 6-dimensional, continuous, and is defined by the following 
 
 \[
-a = [\Delta l, \Delta w, \Delta h, \Delta \varphi, \Delta \vartheta, \Delta \psi]
+a = [\Delta l, \Delta w, \Delta h, \Delta \varphi, \Delta \omega, \Delta \psi]
 \]
 
-where $\Delta l, \Delta w, \Delta h$ are the relative Cartesian offsets in meters along the object's local XYZ frame, and $\Delta \varphi, \Delta \vartheta, \Delta \psi$ represent the relative orientation offsets (roll, pitch, and yaw, respectively) in radians. All position and orientation components are defined relative to the pose of the target object. This means that the action does not command an absolute pose in the workspace frame, but rather a pose expressed in the object's local frame. For example, the action $[0.0, 0.0, 0.0, \frac{\pi}{4}, 0.0, 0.0]$ moves the TCP to the object's centroid with matching pitch and yaw, while introducing a relative roll offset of $45^\circ$. Each component of the relative action is clamped to pre-defined bounds defined by
+where $\Delta l, \Delta w, \Delta h$ are the relative Cartesian offsets in meters along the object's local XYZ frame, and $\Delta \varphi, \Delta \omega, \Delta \psi$ represent the relative orientation offsets (roll, pitch, and yaw, respectively) in radians. All position and orientation components are defined relative to the pose of the target object. This means that the action does not command an absolute pose in the workspace frame, but rather a pose expressed in the object's local frame. For example, the action $[0.0, 0.0, 0.0, \frac{\pi}{4}, 0.0, 0.0]$ moves the TCP to the object's centroid with matching pitch and yaw, while introducing a relative roll offset of $45^\circ$. Each component of the relative action is clamped to pre-defined bounds defined by
+
+\begin{figure}[h]
+\centering\includegraphics[width=0.5\textwidth]{figures/Local Axis.png}
+\caption{Local Coordinate Frame. The yellow dot on the bottle represents its centroid, while the red, green, and blue axes indicate the positive directions of the object's local $x$, $y$, and $z$ axes, respectively. An action containing a $+\Delta l$ component would produce a translation along the red axis, starting from the yellow dot.}
+\label{Local Axis}
+\end{figure}
 
 \[
 \begin{gathered}

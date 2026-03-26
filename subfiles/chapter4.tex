@@ -28,7 +28,6 @@ A common strategy in supervised learning is to train an ensemble of networks rat
 \big( \hat{r}_{\theta_i}(x,a) - \hat\mu_\theta(x,a) \big) ^2}.
 \label{Reward Standard Deviation}
 \end{equation}
-
 The predicted mean reward $\mu_\theta$ serves as the primary estimate of the approximated reward. The standard deviation $\sigma_\theta$ is used quantify model uncertainty. Since independently trained models are likely to produce different predictions for state-action pairs that are poorly represented in the dataset, the standard deviation $\sigma_\theta$ provides a natural measure of uncertainty. Using these quantities, the uncertainty-penalized reward $\tilde{r}_\theta$ is defined as
 
 \begin{equation}
@@ -36,7 +35,6 @@ The predicted mean reward $\mu_\theta$ serves as the primary estimate of the app
 \mu_\theta(x,a) - \beta \cdot \sigma_\theta(x,a),
 \label{Penalized Reward}
 \end{equation}
-
 where the parameter $\beta$ controls the degree to which uncertainty is penalized. Larger values of $\beta$ will lead to more conservative reward approximations and will discourage the policy from selecting actions where the reward model is uncertain.
 
 \begin{algorithm}
@@ -67,7 +65,6 @@ The main contribution of this paper is a modified learning objective. In reinfor
 \eta(x,a) = 
 \eta^+(x,a) + \eta^-(x,a),
 \end{equation}
-
 where
 
 \begin{equation}
@@ -91,7 +88,6 @@ r(x, a + \delta) \geq r(x,a),
 r(x, a - \delta) \geq \tau.
 \end{aligned}
 \end{equation}
-
 The above is for an action that has one-dimension and is better for intuitive understanding. The following is the same formula for vectors 
 
 \begin{equation}
@@ -119,11 +115,10 @@ r(x, \mathbf{a} + \boldsymbol{\delta}) \geq r(x,\mathbf{a}),
 \begin{equation}
 \label{NEWEST MAXANT}
 \eta(x,a) = 
-% \int_{-\delta_{l}}^{\delta_{l}}
-\int
+\int_{-\delta_{l}}^{\delta_{l}}
+% \int
 r(x,a+\delta) \ d\delta
 \end{equation}
-
 Intuitively, $\eta(x,a)$ measures the maximum positive and negative perturbation $\Delta$ that can be applied to action $a$ without the reward falling below the reward threshold $\tau \in [r_{\text{min}}, r_{\text{max}}]$. This function is incorporated into the standard objective and is multiplied by the hyperparameter $\alpha$ to produce the modified objective
 
 \begin{equation}
@@ -133,7 +128,6 @@ J(\phi) =
 % [r(x,\pi_\phi(x)) + \alpha \mathcal{F}(x, \pi_\phi(x),\tau)],
 \big[r\big(x,\pi_\phi(x)\big) + \alpha \cdot\eta\big(x, \pi_\phi(x)\big)\big],
 \end{equation}
-
 where the policy $\pi_\phi$ now aims to maximize not only expected reward, but also robustness to action perturbations. This encourages the selection of actions that not only have high reward but also lie in regions where nearby actions are similarly rated. As a result, the learned policy $\pi_\phi$ is less likely to exploit narrow peaks in the reward landscape and is more likely to converge to broad, high reward regions. This mitigates the risk of both reward exploitation and convergence to local optima. The standard RL objective is recovered as $\alpha$ approaches zero. The policy gradient $\nabla_\phi J(\phi)$ for this objective is
 
 \begin{equation}
@@ -143,7 +137,6 @@ where the policy $\pi_\phi$ now aims to maximize not only expected reward, but a
 \big[\nabla_\phi \pi_\phi(x) \cdot 
 \nabla_a \big(r(x,a) + \alpha \cdot \eta(x,a)\big) |_{a=\pi_\phi(x)} \big],
 \end{equation}
-
 which can be approximated by 
 
 \begin{equation}
@@ -152,7 +145,6 @@ which can be approximated by
 \frac{1}{B} \sum_{b=1}^{B}\nabla_\phi \pi_\phi(x_b) 
 \cdot \nabla_a\big(r(x_b,a_b) + \alpha \cdot \eta(x_i,a_i)\big) |_{a_i=\pi_\phi(x_i)}.
 \end{equation}
-
 where $B$ represents the batch size of the sampled states. The above is an unbiased Monte Carlo estimator for the true objective. The true objective is an expectation over the possible states, but this is hard to estimate, so instead, the sampling provides an approximation of this expectation.
 
 \subsection{Iterative Deployment of Trained Policy}

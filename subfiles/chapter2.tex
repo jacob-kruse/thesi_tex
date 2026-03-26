@@ -4,7 +4,7 @@
 \chapter{Related Work}
 
 \section{Learning Success Models for Grasping}
-Robotic grasping is a major area of study within robotics due to its wide use in manipulation tasks. As these tasks become more complex, traditional hand-engineered approaches are becoming increasingly ineffecitve. As a result, a substantial portion of research in robotic grasping has shifted toward learning-based methods that leverage datasets to model grasp outcomes. Many of these approaches focus on learning a grasp success model that predicts whether a proposed grasp action will succeed in the current state of the environment.
+Robotic grasping is a major area of study within robotics due to its wide use in manipulation tasks. As these tasks become more complex, traditional hand-engineered approaches are becoming increasingly ineffective. As a result, a substantial portion of research in robotic grasping has shifted toward learning-based methods that leverage datasets to model grasp outcomes. Many of these approaches focus on learning a grasp success model that predicts whether a proposed grasp action will succeed in the current state of the environment.
 
 These models are trained to predict the success probability of candidate grasps using information such as RGB images, depth maps, object positions, or affordance representations. For example, after collecting data from 50,000 grasp attempts, \parencite{SSS} trained a Convolutiona Neural Network (CNN) that takes image patches as input and outputs the probability of grip success for a set of candidate grasp angles. Similarly, \parencite{LevineGrasp} learned a grasp prediction network that predicts the likelihood of a successful grasp from visual input and integrated this estimate within a continuous visual servoing controller. 
 
@@ -13,7 +13,7 @@ Other work has explored the use of synthetic datasets to train these grasp evalu
 The method in this paper follows this line of work by learning a grasp success model that maps states and actions to success probabilities. However, rather than using this learned model solely as an evaluation metric for grasp selection, the success predictor is interpreted as a reward function in this work. This reward model is then incorporated into a reinforcement learning framework to optimize an effective grasping policy.
 
 \section{Robust Reinforcement Learning}
-Robust Reinforcement Learning \parencite{RobustRLSurvey} encompasses a class of methods that extend the standard reinforcement learning objective to account for hostile environmental effects or adversarial factors. These approaches are especially useful for real world applications, where uncertainty and disturbances are inherent to the environment. The goal therefore is to learn a policy that achieves high expected reward while remaining effetive in the presence of noise, adversaries, and uncertainty.
+Robust Reinforcement Learning \parencite{RobustRLSurvey} encompasses a class of methods that extend the standard reinforcement learning objective to account for hostile environmental effects or adversarial factors. These approaches are especially useful for real world applications, where uncertainty and disturbances are inherent to the environment. The goal therefore is to learn a policy that achieves high expected reward while remaining effective in the presence of noise, adversaries, and uncertainty.
 
 Prior work in Robust RL can be categorized based on the source of uncertainty that the method aims to address. The most common approaches focus on robustness with respect to uncertainty in the transition dynamics or reward function. For example, \parencite{RobustTransition} accounts for the stochastic nature of the environment by reformulating the reinforcement learning objective as a minimax problem, where the policy is optimized against the worst-case dynamics drawn from the set of possible transition probabilities. Additionally, \parencite{RobustReward} learns a policy that maximizes a combination of a performance and robustness measure, where the robustness component captures the worst-case reward for the evaluated action. By optimizing against the worst-case outcomes in the reward or transition dynamics, these approaches produce policies that are robust but often conservative, sometimes resulting in reduced performance.
 
@@ -30,7 +30,7 @@ Although the method presented in this paper incorporates principles from Offline
 
 \begin{figure}[h]
 \centering\includegraphics[width=0.75\textwidth]{figures/Off RL.png}
-\caption{Offline Reinforcement Learning: An exploration policy $\pi_\beta$ interacts with the environement to collect a dataset of state-action transitions and rewards, which is stored in the buffer $\mathcal{D}$. This dataset is used to train a policy $\pi$, which is then deployed in the environment without further interaction.}
+\caption{Offline Reinforcement Learning. An exploration policy $\pi_\beta$ interacts with the environment to collect a dataset of state-action transitions and rewards, which is stored in the buffer $\mathcal{D}$. This dataset is used to train a policy $\pi$, which is then deployed in the environment without further interaction.}
 \label{Off RL}
 \end{figure}
 
@@ -45,7 +45,7 @@ Although the proposed approach is related to Model-Based RL, it does not explici
 
 \begin{figure}[h]
 \centering\includegraphics[width=0.85\textwidth]{figures/MBRL.png}
-\caption{Model-Based Reinforcement Learning: A policy $\pi_k$ is executed in the real world to collect data, which populates the real world buffer $\mathcal{D}$. This data is used to learn an approximate transition function $\hat{f}_k$. The learned transition function is used to generate a simulated dataset $\hat{\mathcal{D}}$, which is combined with the real-world dataset $\mathcal{D}$ to update the policy $\pi_{k+1}$. This iterative process improves sample efficiency by utilizing simulated data while grounding learning in real world experience.}
+\caption{Model-Based Reinforcement Learning. A policy $\pi_k$ is executed in the real world to collect data, which populates the real world buffer $\mathcal{D}$. This data is used to learn an approximate transition function $\hat{f}_k$. The learned transition function is used to generate a simulated dataset $\hat{\mathcal{D}}$, which is combined with the real-world dataset $\mathcal{D}$ to update the policy $\pi_{k+1}$. This iterative process improves sample efficiency by utilizing simulated data while grounding learning in real world experience.}
 \label{MBRL}
 \end{figure}
 

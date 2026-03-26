@@ -2,7 +2,6 @@
 \begin{document}
 
 \chapter{Preliminaries}
-% Although Reinforcement Learning provides the basis for the research in this paper, it is generally applied to tasks that are sequential in nature. For tasks where the transition to the next state can be ignored, bandits are a much better framework to represent the problem. There are several types of bandit representations, and for tasks with multiple actions, the resulting framework is the multi-armed bandit. The contextual bandit extends this to situations with multiple states or contexts, and is the chosen framework in this paper.
 
 \section{Contextual Bandit Framework}
 \label{Framework}
@@ -16,7 +15,6 @@ J(\phi) =
 \big[r \big( x, \pi_\phi (x) \big) \big].
 \label{J}
 \end{equation}
-
 By repeatedly taking the gradient of the objective $\nabla_\phi J(\phi)$, the policy parameters can be continuously updated and push the policy towards optimality. The deterministic policy gradient from \parencite{DPG} can then be defined by the following
 
 \begin{equation}
@@ -25,7 +23,6 @@ By repeatedly taking the gradient of the objective $\nabla_\phi J(\phi)$, the po
 \big[\nabla_\phi \pi_\phi(x) \cdot \nabla_a r(x, a)|_{a=\pi_\phi(x)} \big].
 \label{GJ}
 \end{equation}
-
 Please note that the original deterministic policy gradient is applied to actor-critic RL algorithms, so in the above, the the Q-function $Q^\pi(s,a)$ has been replaced with the reward function. The Q-function represents the value for taking action $a$ in state $s$ and following the policy $\pi$ thereafter. The thing that makes the Q-function different from the reward function is that the Q-function captures the total discounted sum of future rewards while the reward function represents only the immediate reward. Because this paper deals with the formulation of contextual bandits rather than MDP's, there are no transition and resulting states to worry about, so the replacement of the Q-function with the reward function in Equations \eqref{J} and \eqref{GJ} is justified. 
 
 The deterministic policy gradient can be estimated from executing the policy $\pi_\phi$ in the real-world and adding the observed data to a dataset $\mathcal{D}^{\pi_\phi}=\{(x_i,a_i,r_i)\}_i^{\|\mathcal{D}^{\pi_\phi}\|}$. The dataset $\mathcal{D}^{\pi_\phi}$ can be used to estimate the deterministic policy gradient with the following
@@ -55,9 +52,32 @@ For an approximate reward function $\hat{r_\theta}(x,a)$ with parameters $\theta
 \mathcal{L}(r_b,\hat{r}_\theta(x_b,a_b)).
 \label{Loss}
 \end{equation}
-
 This gradient-based optimization updates the parameters $\theta$ so that the learned reward function $\hat{r}_\theta(x,a)$ accurately approximates the true reward. Once trained, the approximate reward function can be used for policy optimization, enabling sample-efficient learning without the true reward function.
 
+\section{Regularization in Offline Reinforcement Learning}
+Although Offline Reinforcement Learning is effective, it is not without limitations. A key challenge arises from the fact that optimization is performed on a static dataset. This can lead to overfitting, where the learned policy performs well on the observed data but fails to generalize to unseen situations when deployed in the real world. These failures arise because the policy exploits biases in the dataset, which may be incomplete or does not sufficiently cover the relevant state and action spaces. This is particularly problematic because Offline RL does not have the ability to correct these errors with environmental feedback like standard Online RL algorithms.
+
+To address these limitations, a common approach is to incorporate regularization into the learning process. In Offline RL, regularization refers to the addition of an extra term or function to the standard RL objective. This term is designed to penalize or encourage specific states, actions, or characteristics, effectively shaping the learned policy towards behaviors that are not fully represented in the dataset. The main idea is that the dataset is limited or biased, and the regularization term serves as a corrective mechanism, guiding the policy towards more favorable outcomes. Formally, for a policy $\pi_\phi$ parameterized by $\phi$ and a regularization function $\mathcal{R}(\cdot)$, the regularized objective can then be written as
+
+\begin{equation}
+J(\phi) = 
+\mathbb{E}_{x \sim p_x(\cdot)}
+\big[r \big( x, \pi_\phi (x) \big) \big] + \mathcal{R}(\cdot),
+\label{Regularized Objective}
+\end{equation}
+where the regularization term $\mathcal{R}(\cdot)$ can depend on any relevant variables, including the context $x$, action $a$, or even the policy $\pi_\phi$ itself. 
+
+The regularization function $\mathcal{R}(\cdot)$ is highly versatile and can be applied in multiple ways. For instance, adding a positive entropy term to the objective promotes stochasticity and encourages exploration in the policy, which is exemplified in \parencite{SAC}. Alternatively, regularization can be used to constrain the learned policy to remain close to the dataset distribution. An example from \parencite{f-Divergence} is the use of a negative $f$-divergence term, which penalizes deviations from the dataset and ensures the policy remains supported by the data. Overall, regularization is a powerful tool capable of inducing desirable behaviors and compensating for the limitations of Offline RL while maintaining computational and sample efficiency.
+
+% \section{Supervised Learning}
+% \section{Policy Optimization}
+% \section{Reinforcement Learning}
+% \subsection{Model-Free}
+% \subsection{Actor Critic}
+% \subsection{Value-Based}
+% \subsection{Policy Gradient}
+% \section{REINFORCE}
+% \section{Ensemble Models}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

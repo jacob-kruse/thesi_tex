@@ -35,6 +35,7 @@ Although the method presented in this paper incorporates principles from Offline
 \end{figure}
 
 \section{Model-Based Reinforcement Learning}
+\label{MBRL Paragraph}
 Model-Based Reinforcement Learning \parencite{MBRLSurvey} is a class of methods that learn a model of the environment's dynamics or transition function, which predicts the resulting state of actions taken by the agent. The learned transition model allows the agent to simulate future states and generate synthetic data without interacting with the real environment. This is particularly useful in domains where real world interactions are costly, dangerous, or time consuming. Leveraging a learned model, these methods significantly improve sample efficiency since the agent can perform planning and optimization on a combination of real and simulated experiences. A basic Model-Based RL pipeline is illustrated in Figure~\ref{MBRL}.
 
 A key challenge in Model-Based RL is model accuracy and uncertainty. Several approaches address this issue through uncertainty-aware modeling, such as ensemble methods which train multiple independent models. One approach, proposed in \parencite{MBRL1}, trains an ensemble of $K$ dynamics models and randomly selects one for each rollout, which helps reduce overfitting and increases robustness to individual errors. Additionally, \parencite{MBRL2} learns $N$ reward models and estimates the reward as the ensemble mean penalized by the maximum standard deviation to incentivize the policy to avoid regions of high uncertainty. 

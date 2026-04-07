@@ -60,46 +60,46 @@ Although it is common to compute a policy by directly maximizing the reward mode
 \subsection{Maximum Action Noise Threshold Objective}
 The main contribution of this paper is a modified learning objective. In reinforcement learning, the main objective is to maximize expected reward, formalized in Equation \ref{J}. However, when optimizing  this objective in the offline setting with an approximate reward model, two issues can arise. First, the policy may exploit inaccuracies in the reward model, selecting actions that are highly rated by the approximate reward function but are actually suboptimal in the real-world. Secondly, the policy may converge to local optima due to limited exploration and the absence of online feedback. To address these challenges, we introduce a new learning objective based on a function $\eta(x,a)$, called the \textbf{Maximum Action Noise Threshold (MaxANT)} function, defined as 
 
-\begin{equation}
-\label{Max ANT Function}
-\eta(x,a) = 
-\eta^+(x,a) + \eta^-(x,a),
-\end{equation}
-where
+% \begin{equation}
+% \label{Max ANT Function}
+% \eta(x,a) = 
+% \eta^+(x,a) + \eta^-(x,a),
+% \end{equation}
+% where
 
-\begin{equation}
-\label{Max ANT Plus}
-\begin{aligned}
-\eta^+(x,a)
-&= \max_{\Delta} \Delta
-&\text{such that} \quad
-\forall \delta \in [0, \Delta]; \;
-r(x, a + \delta) \geq r(x,a),
-\end{aligned}
-\end{equation}
+% \begin{equation}
+% \label{Max ANT Plus}
+% \begin{aligned}
+% \eta^+(x,a)
+% &= \max_{\Delta} \Delta
+% &\text{such that} \quad
+% \forall \delta \in [0, \Delta]; \;
+% r(x, a + \delta) \geq r(x,a),
+% \end{aligned}
+% \end{equation}
 
-\begin{equation}
-\label{Max ANT Minus}
-\begin{aligned}
-\eta^-(x,a)
-&= \max_{\Delta} \Delta
-&\text{such that} \quad
-\forall \delta \in [0, \Delta], \; 
-r(x, a - \delta) \geq \tau.
-\end{aligned}
-\end{equation}
+% \begin{equation}
+% \label{Max ANT Minus}
+% \begin{aligned}
+% \eta^-(x,a)
+% &= \max_{\Delta} \Delta
+% &\text{such that} \quad
+% \forall \delta \in [0, \Delta], \; 
+% r(x, a - \delta) \geq \tau.
+% \end{aligned}
+% \end{equation}
 The above is for an action that has one-dimension and is better for intuitive understanding. The following is the same formula for vectors 
 
-\begin{equation}
-\label{Max ANT Plus}
-\begin{aligned}
-\eta^+(x,a)
-&= \max_{\boldsymbol{\Delta}} \|\boldsymbol{\Delta}\|_1 \\
-&\text{such that} \quad
-\forall \boldsymbol{\delta} \in [0, \boldsymbol{\Delta}]; \;
-r(x, \mathbf{a} + \boldsymbol{\delta}) \geq r(x,\mathbf{a}),
-\end{aligned}
-\end{equation}
+% \begin{equation}
+% % \label{Max ANT Plus}
+% \begin{aligned}
+% \eta^+(x,a)
+% &= \max_{\boldsymbol{\Delta}} \|\boldsymbol{\Delta}\|_1 \\
+% &\text{such that} \quad
+% \forall \boldsymbol{\delta} \in [0, \boldsymbol{\Delta}]; \;
+% r(x, \mathbf{a} + \boldsymbol{\delta}) \geq r(x,\mathbf{a}),
+% \end{aligned}
+% \end{equation}
 
 % \begin{equation}
 % \label{Max ANT Minus}
@@ -117,7 +117,7 @@ r(x, \mathbf{a} + \boldsymbol{\delta}) \geq r(x,\mathbf{a}),
 \eta(x,a) = 
 \int_{-\delta_{l}}^{\delta_{l}}
 % \int
-r(x,a+\delta) \ d\delta
+\mathcal{R}(x,a+\delta) \ d\delta
 \end{equation}
 Intuitively, $\eta(x,a)$ measures the maximum positive and negative perturbation $\Delta$ that can be applied to action $a$ without the reward falling below the reward threshold $\tau \in [r_{\text{min}}, r_{\text{max}}]$. This function is incorporated into the standard objective and is multiplied by the hyperparameter $\alpha$ to produce the modified objective
 
@@ -126,7 +126,7 @@ Intuitively, $\eta(x,a)$ measures the maximum positive and negative perturbation
 J(\phi) =
 \mathbb{E}_{x \sim p_x(\cdot)}
 % [r(x,\pi_\phi(x)) + \alpha \mathcal{F}(x, \pi_\phi(x),\tau)],
-\big[r\big(x,\pi_\phi(x)\big) + \alpha \cdot\eta\big(x, \pi_\phi(x)\big)\big],
+\Big[\mathcal{R}\big(x,\pi_\phi(x)\big) + \alpha \cdot\eta\big(x, \pi_\phi(x)\big)\Big],
 \end{equation}
 where the policy $\pi_\phi$ now aims to maximize not only expected reward, but also robustness to action perturbations. This encourages the selection of actions that not only have high reward but also lie in regions where nearby actions are similarly rated. As a result, the learned policy $\pi_\phi$ is less likely to exploit narrow peaks in the reward landscape and is more likely to converge to broad, high reward regions. This mitigates the risk of both reward exploitation and convergence to local optima. The standard RL objective is recovered as $\alpha$ approaches zero. The policy gradient $\nabla_\phi J(\phi)$ for this objective is
 

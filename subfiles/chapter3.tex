@@ -1,93 +1,82 @@
 \documentclass[./dissertation.tex]{subfiles}
 \begin{document}
 
-\chapter{Preliminaries}
-% Add intro here for the section
+\chapter{Foundational Concepts}
+This chapter reviews the fundamental principles and methods that define this work, providing the necessary background for understanding the techniques presented later. Section \ref{Framework} introduces Contextual Bandits, a framework for context-aware, action-selecting agents. Section \ref{PGRL} discusses Policy Gradient Reinforcement Learning, highlighting the basics of policy optimization with the gradient of the learning objective. Section \ref{RFM} describes the process of modeling the expected reward function, emphasizing the estimation of unknown reward distributions through self-supervised learning. Finally, Section \ref{Reg} introduces regularization in RL, explaining how it can improve the policies learned from static datasets. Together, these preliminaries establish the theoretical and practical foundation for the approach developed in this work.
 
 \section{Contextual Bandits}
 \label{Framework}
 The Multi-Armed Bandit \parencite{MABandit} framework is one of the most widely used models for decision making under uncertainty. In this setting, a single agent chooses from $K$ arms or actions in each round and receives a reward from an unknown distribution associated with the chosen arm. After observing the reward, the agent repeats this process by selecting from the same set of arms, making it a sequential problem with inherent uncertainty. The objective is to both learn the reward distribution of each arm and to maximize the expected reward.
-
 % The Multi-Armed Bandit was named this due to the similarity to a slot machine, which is a bandit with one arm that leads to an unknown reward.
 
 A common extension of the Multi-Armed Bandit model is the Contextual Bandit framework \parencite{CBandit}. Similar to the previous formulation, the agent chooses from a set of $K$ arms or actions; however, in this case, the reward distribution now depends on an observed context. Despite this added structure, the goal of the Contextual Bandit problem remains the same as the Multi-Armed Bandit, to maximize reward in a stochastic and unknown environment. The Contextual Bandit (CB) can be formally defined with the tuple
-
 \begin{equation}
 \text{CB} = \langle \mathcal{X}, \mathcal{A}, R \rangle,
 \end{equation}
 where $\mathcal{X}$ denotes the context space, $\mathcal{A}$ represents the action space, and $R$ is the reward function. These components are explained below: 
-
 \begin{itemize}
 
     \item \textbf{Context Space:} The context space $\mathcal{X}$ is the set of all possible contexts in the environment. In each round, a context $x \in \mathcal{X}$ is observed, representing the current state of the environment. The context $x$ is drawn from an underlying context distribution $\rho_x$. The context may be discrete, continuous, or multi-dimensional, and is assumed to be fully observable.
 
     \item \textbf{Action Space:} The action space $\mathcal{A}$ is the set of all possible actions available to the agent. Given a context $x$, the agent selects an action $a \in \mathcal{A}$ and executes it in the environment. The action may also be discrete, continuous, or multi-dimensional.
 
-    \item \textbf{Reward Function:} The reward function $R$ is used to determine the reward $r$ after each round. The reward function $R$ is a function of the context $x$ and action $a$ and returns a distribution of real-valued rewards $R: \mathcal{X} \times \mathcal{A} \to \Delta_\mathbb{R}$. The observed reward $r$ is then sampled from the reward function $r \sim  R(x,a)$ during each round. The underlying reward distribution induces an expected reward function $\mathcal{R}(x,a)=\mathbb{E}_{r \sim R(x,a)}[r]$, which represents the average reward for each state-action pair.
+    \item \textbf{Reward Function:} The reward function $R$ is used to determine the reward $r$ after each round. The reward function $R$ is a function of the context $x$ and action $a$ and returns a distribution of real-valued rewards $R: \mathcal{X} \times \mathcal{A} \to \Delta_\mathbb{R}$. The observed reward $r$ is then sampled from the reward function $r \sim  R(\cdot|x,a)$ during each round. The underlying reward distribution induces an expected reward function $\mathcal{R}(x,a)=\mathbb{E}_{r \sim R(\cdot|x,a)}[r]$, which represents the average reward for each state-action pair.
 
 \end{itemize}
 
-In order to determine which actions to take in each context, the agent implements a policy $\pi$, which defines a mapping from the context space to the action space. A policy can either be stochastic or deterministic, depending on the desired behavior. A stochastic policy maps a given context $x$ to a probability distribution over the actions $\pi: \mathcal{X} \to \Delta_{\mathcal{A}}$. To select an action, the agent samples the action $a$ from the resulting distribution $a \sim \pi(\cdot|x)$. In the deterministic case, the policy maps each context to a single action $\pi: \mathcal{X} \to \mathcal{A}$, such that $a = \pi(x)$ with a probability of 1.
+In order to determine which actions to take in each context, the agent implements a policy $\pi$, which defines a mapping from the context space to the action space. A policy can either be stochastic or deterministic, depending on the desired behavior. A stochastic policy maps a given context $x$ to a probability distribution over the actions $\pi: \mathcal{X} \to \Delta_{\mathcal{A}}$. To select an action, the agent samples the action $a$ from the resulting distribution $a \sim \pi(\cdot|x)$. In the deterministic case, the policy maps each context to a single action $\pi: \mathcal{X} \to \mathcal{A}$, such that $a = \pi(x)$ with a probability of $1$.
 
 \section{Policy Gradient Reinforcement Learning}
+\label{PGRL}
 Reinforcement Learning (RL) \parencite{RL} is one of the most extensively studied paradigms in artificial intelligence. It can be described as the process of an agent learning rational, favorable behavior through interactions with its environment. A wide variety of techniques fall under the umbrella of RL, but they are generally categorized into two broad classes: Model-Based and Model-Free methods. In Model-Based RL (see Section \ref{MBRL Paragraph}), the agent tries to learn a model of the environment and uses this model for planning or predicting outcomes. In contrast, Model-Free RL bypasses the need for a model and aims to learn through direct interaction with the environment. Model-Free methods are highly popular due to their simplicity, robustness, and ability to scale to complex domains.
 
 To take this a step further, Model-Free RL methods can be divided even further into Policy Gradient, Value-Based, and Actor-Critic techniques. In Policy Gradient approaches, the agent directly optimizes its policy by interacting with the environment and using the observed rewards to guide policy updates. These approaches are well-suited for continuous action spaces, as they focus solely on the policy, but are generally restricted to being on-policy due to the nature of policy optimization. In contrast, Value-Based RL methods focus on learning a function that estimates the value of states or actions, which is then used to guide action selection. These methods are typically more sample-efficient than Policy Gradient techniques because they can reuse past data, but they can struggle with large or continuous state and action spaces. Finally, Actor-Critic methods combine the strengths of Policy Gradient and Value-Based approaches. In this framework, the actor represents the policy and the critic refers to the value function. The feedback of the critic is used to update the actor, leading to more stable and efficient learning compared to the either method alone.
 
 Despite the wide variety of RL algorithms, the underlying learning objective remains the same: to find a policy $\pi$ that maximizes the expected reward. The most general form of the learning objective is defined with the Markov Decision Process (MDP) framework \parencite{MDP}, and is commonly expressed as
-
 \begin{equation}
-J(\pi) = \mathbb{E}_{s_0 \sim \rho_s, \ a_t \sim \pi(\cdot|s_t), \ s_{t+1} \sim \mathcal{T}(s_t,a_t)}
-\Big[\sum_{t=1}^T R(s_t,a_t)\Big],
+J(\pi) = \mathbb{E}_{s_0 \sim \rho_s, \ a_t \sim \pi(\cdot|s_t), \ s_{t+1} \sim T(\cdot|s_t,a_t)}
+\Big[\sum_{t=1}^\infty R(s_t,a_t)\Big],
 \end{equation}
-where the initial state $s_0$ is sampled from the state distribution $\rho_s$, actions $a_t$ are sampled from the stochastic policy $\pi$, resulting states $s_{t+1}$ are sampled from the transition function $\mathcal{T}(s,a)$, and rewards are given by the reward function $R(s,a)$ which is assumed to be deterministic.
+where the initial state $s_0$ is sampled from the state distribution $\rho_s$, actions $a_t$ are sampled from the stochastic policy $\pi$, resulting states $s_{t+1}$ are sampled from the stochastic transition function $T$, and rewards are given by the reward function $R$ which is assumed to be deterministic.
 
-To adapt this learning objective to the Contextual Bandit setting, some changes need to be made. Since Contextual Bandits involve no state/context transitions and no notion of sequential decision-making, the transition function $\mathcal{T}(s,a)$ and the summation over all time steps in an episode can be removed. Additionally, the reward function is typically modeled as stochastic, with observed rewards sampled as $r \sim R(x,a)$. This can be handled either by taking an expectation over sampled rewards or, equivalently, by directly using the expected reward function $\mathcal{R}(x,a)$, which simplifies the formulation while remaining consistent with the original objective.
+To adapt this learning objective to the Contextual Bandit setting, some changes need to be made. Since Contextual Bandits involve no state/context transitions and no notion of sequential decision-making, the transition function $T$ and the summation over all time steps in an episode can be removed. Additionally, the reward function is typically modeled as stochastic rather than deterministic, with observed rewards sampled as $r \sim R(\cdot|x,a)$. This can be handled either by taking an expectation over sampled rewards or, equivalently, by directly using the expected reward function $\mathcal{R}$, which simplifies the formulation while remaining consistent with the original objective.
 
-On top of all this, a deterministic policy is implemented, where each context $x$ is mapped to a fixed action $a = \pi(x)$. Under these modifications, the learning objective becomes
-
+On top of all this, let's consider the implementation of a deterministic policy, where each context $x$ is mapped to a fixed action $a = \pi(x)$. Under these modifications, the learning objective becomes
 \begin{equation}
 J(\pi) = \mathbb{E}_{x \sim \rho_x}\Big[\mathcal{R}\big(x,\pi(x)\big)\Big],
 \label{J}
 \end{equation}
-where contexts $x$ are sampled from the context distribution $\rho_x$, rewards are given by the expected reward function $\mathcal{R}(x,a)$, and actions are deterministically selected by the policy $\pi$.
-
-Although Contextual Bandits may employ either stochastic or deterministic policies, this work focuses on deterministic policies; therefore, Equation \ref{J} is adopted as the learning objective. Under this formulation, the optimal policy $\pi^\star$ is defined as the policy that maximizes expected reward:
-
+where contexts $x$ are sampled from the context distribution $\rho_x$, rewards are given by the expected reward function $\mathcal{R}$, and actions are deterministically selected by the policy $\pi$. Although Contextual Bandits may employ either stochastic or deterministic policies, this work focuses on deterministic policies; therefore, Equation \ref{J} is adopted as the learning objective. Under this formulation, the optimal policy $\pi^\star$ is defined as the policy that maximizes expected reward:
 \begin{equation}
 \pi^\star = 
 \arg\max_{\pi} J(\pi).
 \end{equation}
 
 With the advancement of Deep Reinforcement Learning \parencite{DeepRL}, it has become increasingly common to represent policies using neural networks. A neural network \parencite{NN} can be described as a parameterized function composed of multiple layers and interconnected nodes, where each layer applies weights, biases, and activation functions. After receiving an input, the network propagates it through its layers to produce an output. In the RL setting, the neural network acts as the policy, taking a state or context representation as input and producing an action or distribution over actions as output. The use of these networks enables highly expressive, nonlinear function approximation, allowing policies and value functions to handle high-dimensional and complex domains. When a policy is parameterized by a neural network with parameters $\phi$, it is denoted as $\pi_\phi$. The learning objective can then be written as a function of these parameters:
-
 \begin{equation}
 J(\phi) = \mathbb{E}_{x \sim \rho_x}\Big[\mathcal{R}\big(x,\pi_\phi(x) \big)\Big].
 \end{equation}
 Importantly, the objective itself has not changed, but instead, it is now expressed in terms of the parameters $\phi$ that represent the policy. This shift is crucial, as it transforms the reinforcement learning problem into an optimization problem over the parameter space.
 
 This change gives rise to the central idea behind Policy Gradient methods, which is to optimize the parameters $\phi$ using the gradient of the objective. More specifically, the goal is to iteratively update the parameters $\phi$ in the direction of the gradient $\nabla_\phi J(\phi)$, which quantifies how changes in the parameters affect the expected reward. For the Contextual Bandit setting, the deterministic policy gradient can be expressed as a modification of the original formulation in \parencite{DPG}:
-
 \begin{equation}
 \nabla_\phi J(\phi) =
 \mathbb{E}_{x \sim \rho_x}
 \Big[\nabla_\phi \pi_\phi(x) \cdot \nabla_a \mathcal{R}(x,a) |_{a=\pi_\phi(x)} \Big].
 \label{GJ}
 \end{equation}
-This expression differs from the original deterministic policy gradient formulation because it is adapted to the Contextual Bandit setting rather than the MDP framework \parencite{MDP}. In a standard MDP, the policy gradient depends on the Q-function $Q(s,a)$, which represents the total discounted sum of future rewards starting from state $s$ and taking action $a$. The Q-function captures transition dynamics and is required to propagate future rewards back to earlier actions. In contrast, Contextual Bandits have no state or context transitions, so the policy does not need to account for future outcomes. As a result, the Q-function can be replaced by the immediate expected reward function $\mathcal{R}(x,a)$, allowing the deterministic policy gradient to be applied directly to Contextual Bandits.
+This expression differs from the original deterministic policy gradient formulation because it is adapted to the Contextual Bandit setting rather than the MDP framework \parencite{MDP}. In a standard MDP, the policy gradient depends on the Q-function $Q(s,a)$, which represents the total discounted sum of future rewards starting from state $s$ and taking action $a$. The Q-function captures transition dynamics and is required to propagate future rewards back to earlier actions. However, Contextual Bandits have no state or context transitions, so the policy does not need to account for future outcomes. As a result, the Q-function $Q$ can be replaced by the immediate expected reward function $\mathcal{R}$, allowing the deterministic policy gradient to be applied directly to Contextual Bandits.
 
 Policy Gradient methods use the gradient of the learning objective to directly optimize the policy parameters. More specifically, the algorithm performs gradient ascent, adjusting the policy parameters in the direction that increases the expected reward. At each update step, the parameters are adjusted according to 
-
 \begin{equation}
-\phi_{k+1} = \phi_k + \lambda \cdot \nabla_\phi J(\phi_k),
+\phi_{k+1} = \phi_k + \lambda \cdot \nabla_{\phi_k} J(\phi_k),
 \end{equation}
 where $\lambda$ is the learning rate. This update effectively pushes the policy toward actions that yield higher rewards, reinforcing behaviors that are more likely to succeed.
 
-In practice, the gradient of the learning objective cannot be calculated exactly because it depends on the full distribution of contexts and rewards, which is generally unknown. Instead, it must be estimated from sampled interactions with the environment. This can be done by executing the current policy $\pi_\phi$ in the real-world and adding the observed context, action, and reward tuples into a dataset $\mathcal{D}^{\pi_\phi}=\{(x_b,a_b,r_b)\}_{b=1}^{\|\mathcal{D}^{\pi_\phi}\|}$. This dataset provides a finite sample of the policy's behavior and its effects on the environment, which can be used to estimate the gradient. The deterministic policy gradient can then be approximated as
-
+In practice, the gradient of the learning objective cannot be calculated exactly because it depends on the full distribution of contexts and rewards, which is generally unknown. Instead, it must be estimated from sampled interactions with the environment. This can be done by executing the current policy $\pi_\phi$ in the real-world and adding the observed context, action, and reward tuples into a dataset $\mathcal{D}_{\pi_\phi}=\{(x_b,a_b,r_b)\}_{b \in \mathcal{D}_{\pi_\phi}}$. This dataset provides a finite sample of the policy's behavior and its effects on the environment, which can be used to estimate the gradient. The deterministic policy gradient can then be approximated as
 \begin{equation}
 \nabla_\phi J(\phi) \approx  
-\frac{1}{\|\mathcal{D}^{\pi_\phi}\|} \sum_{b=1}^{\|\mathcal{D}^{\pi_\phi}\|}
+\frac{1}{\|\mathcal{D}_{\pi_\phi}\|} \sum_{\ \ \ b \in \mathcal{D}_{\pi_\phi}}
 \nabla_\phi \pi_\phi(x_b) \cdot 
 \nabla_a \mathcal{R}(x_b,a_b) |_{a_b=\pi_\phi(x_b)}.
 \label{AGJ}
@@ -96,105 +85,91 @@ This expression is an unbiased Monte Carlo estimate of the true gradient. Althou
 
 % The method in this paper was designed to be applied to a one-step, no horizon task, which is described in the Experiments \ref{Experiments} section. 
 
-\section{Reward Function Modeling}
+\section{Reward Modeling}
 \label{RFM}
-The reward function $R(x,a)$ for a Contextual Bandit, defined in Section \ref{Framework}, is stochastic and returns a distribution over real-valued rewards. After taking action $a$ in context $x$, the observed reward $r$ is sampled from this distribution $r \sim R(x,a)$. The expected reward function $\mathcal{R}(x,a)$ can be used equivalently to represent the sampled rewards, but it instead returns a scalar value. Because of this, if the expected reward function is known, the policy can use it directly for optimization by calculating the gradient with Equations \ref{GJ} or \ref{AGJ}.
+The reward function $R$ for a Contextual Bandit, defined in Section \ref{Framework}, is stochastic and returns a distribution over real-valued rewards. After taking action $a$ in context $x$, the observed reward $r$ is sampled from this distribution $r \sim R(\cdot|x,a)$. The expected reward function $\mathcal{R}$ can be used equivalently to represent the sampled rewards, but it instead returns a scalar value. Because of this, if the expected reward function is known, the policy can use it directly for optimization by calculating the gradient with Equations \ref{GJ} or \ref{AGJ}.
 
 In many practical settings, however, the true reward function is unknown and must be inferred through interactions with environment. One approach is to learn a policy directly from past experience and utilize importance sampling \parencite{IS}. Since this experience is collected under an exploration policy $\pi_\beta$, whose action probabilities differ from the policy $\pi_k$ being optimized, the expected reward cannot be accurately estimated without adjustment. Importance sampling addresses this by weighting observed actions according to how likely the trained policy $\pi_k$ would select them, thereby producing a more accurate estimate of the expected reward under the target policy $\pi_k$.
 
-Although importance sampling is powerful, it struggles with deterministic policies and continuous action spaces. As an alternative, one can use the collected data to learn a model that approximates the expected reward function $\hat{\mathcal{R}}(x,a)$, and use this in place of the true expected reward function $\mathcal{R}(x,a)$ for policy optimization. Under the exploration policy $\pi_\beta$, the agent observes tuples of the form $(x_b, a_b, r_b)$ where $x_b$ is the context, $a_b\sim\pi_\beta(\cdot|x_b)$ is the action taken, and $r_b$ is the observed reward. These interactions can be used to generate a dataset $\mathcal{D}=\{(x_b,a_b,r_b)\}_{b=1}^{\|\mathcal{D}\|}$. Modeling the approximate reward function then becomes a Supervised Learning problem.
+Although importance sampling is powerful, it struggles with deterministic policies and continuous action spaces. As an alternative, one can use the collected data to learn a model that approximates the expected reward function $\hat{\mathcal{R}}$, and use this in place of the true expected reward function $\mathcal{R}$ for policy optimization. Under the exploration policy $\pi_\beta$, the agent observes tuples of the form $(x_b, a_b, r_b)$ where $x_b$ is the context, $a_b\sim\pi_\beta(\cdot|x_b)$ is the action taken, and $r_b$ is the observed reward. These interactions can be used to generate a dataset $\mathcal{D}=\{(x_b,a_b,r_b)\}_{b \in \mathcal{D}}$. Modeling the approximate reward function then becomes a Supervised Learning problem.
 
 In Supervised Learning \parencite{SL}, the goal is to obtain a model that predicts the true labels of all input-output pairs in a dataset. To measure the discrepancy between the true labels $y$ corresponding to input $x$ and predicted labels $\hat y$ from the approximate model $\hat{f}(x)$, a loss function $\mathcal{L}\big(y,\hat{f}(x)\big)$ is introduced \parencite{LossSurvey}. The empirical risk $\mathscr{L}(\mathcal{D},\hat{f})$ or the average loss of the model over an entire dataset is then defined as 
-
 \begin{equation}
 \mathscr{L}(\mathcal{D},\hat{f})=
-\frac{1}{\|\mathcal{D}\|} \sum_{b=1}^{\|\mathcal{D}\|}
+\frac{1}{\|\mathcal{D}\|} \sum_{b \in \mathcal{D}}
 \mathcal{L}\big(y_b,\hat{f}(x_b)\big).
 \end{equation}
 This quantity measures the performance of the model on the observed data. The model that best fits the data $\hat{f}^{\star}$ is obtained by minimizing the empirical risk:
-
 \begin{equation}
 \hat{f}^{\star}= 
 \arg\min_{\hat{f}}\mathscr{L}(\mathcal{D},\hat{f}).
 \label{SL Problem}
 \end{equation}
 
-In practice, it is very common to represent the model using a neural network. For a model $\hat{f}_\theta$ parameterized by $\theta$, the loss function can be rewritten as $\mathcal{L}(y,\theta)$, so that it is now a function of the true labels $y$ and the parameters $\theta$ that represent the approximate model. With this change, Equation \ref{SL Problem} is reframed as finding the parameters that minimize the empirical risk. This optimization problem is typically solved with gradient descent, where the parameters are iteratively updated in the direction of the negative gradient of the empirical risk. The parameters $\theta$ are then updated according to the following rule:
+In practice, it is very common to represent the model using a neural network. For a model $\hat{f}_\theta$ parameterized by $\theta$, the loss function can be rewritten as $\mathcal{L}(y,\theta)$, so that it is now a function of the true labels $y$ and the parameters $\theta$ that represent the approximate model. With this change, Equation \ref{SL Problem} is reframed as finding the parameters that minimize the empirical risk. This optimization problem is typically solved with gradient descent, where the parameters are iteratively updated in the direction of the negative gradient of the empirical risk. The parameters $\theta$ are updated according to the following rule:
 \begin{equation}
-\theta_{k+1} = \theta_k - \lambda \cdot \nabla_\theta \mathscr{L}(\theta_k),
+\theta_{k+1} = \theta_k - \lambda \cdot \nabla_\theta \mathscr{L}(\mathcal{D},\theta_k),
 \end{equation}
 where $\lambda$ is the learning rate.
 
-In the setting of learning a model to approximate the expected reward function, the goal is to predict the true expected reward for each context-action pair. This means the reward model is trained by minimizing the loss between the true observed rewards and predicted expected rewards: $\mathcal{L}\big(r_b,\hat{\mathcal{R}}_\theta(x_b,a_b)\big)$. Because rewards are obtained directly from interactions with the environment, no manual annotation is required. In this case, reward modeling can be viewed as a form of Self-Supervised Learning \parencite{SelfSL}, an effective branch of Supervised Learning that avoids the cost of labeling large datasets. For a self-annotated dataset $\mathcal{D}$, the optimal parameters $\theta$ are obtained by iteratively minimizing the empirical risk over sampled mini-batches of size $B$:
-
+In the setting of learning a model to approximate the expected reward function, the goal is to predict the true expected reward for each context-action pair. This means the reward model is trained by minimizing the loss between the true observed rewards and predicted expected rewards: $\mathcal{L}\big(r_b,\hat{\mathcal{R}}_\theta(x_b,a_b)\big)$. Because rewards are obtained directly from interactions with the environment, no manual annotation is required. In this case, reward modeling can be viewed as a form of Self-Supervised Learning \parencite{SelfSL}, an effective branch of Supervised Learning that avoids the cost of labeling large datasets. For a self-annotated dataset $\mathcal{D}$, the optimal parameters $\theta$ of the approximate expected reward function $\hat{\mathcal{R}}$ are obtained by iteratively minimizing the empirical risk over a sampled mini-batch $B$:
 \begin{equation}
 \theta^\star = 
 \arg\min_\theta
-\frac{1}{B} \sum_{b=1}^B
+\frac{1}{\|B\|} \sum_{b \in B}
 \mathcal{L}\big(r_b,\hat{\mathcal{R}}_\theta(x_b,a_b)\big).
 \label{Loss}
 \end{equation}
 Once trained, this model can be used for policy optimization, enabling sample-efficient learning without access to the true expected reward function.
 
-When applying Supervised Learning, it is important to choose a loss function that is appropriate for the given problem. In the context of learning an approximate expected reward function $\hat{\mathcal{R}}(x,a)$, the model is trying to capture the true underlying stochastic reward function $R(x,a)$, which returns a probability distribution over discrete reward outcomes. Because of this, Cross-Entropy (CE) loss \parencite{BCELoss} is suitable, as it is widely used for probability models and classification tasks. The most general form of CE loss is Categorical Cross-Entropy loss $\mathcal{L}_{CCE}$, which is defined as
-
+When applying Supervised Learning, it is important to choose a loss function that is appropriate for the given problem. In the context of learning an approximate expected reward function $\hat{\mathcal{R}}$, the model is trying to capture the true underlying stochastic reward function $R$, which returns a probability distribution over discrete reward outcomes. Because of this, Cross-Entropy (CE) loss \parencite{BCELoss} is suitable, as it is widely used for probability models and classification tasks. The most general form of CE loss is Categorical Cross-Entropy loss $\mathcal{L}_{CCE}$, which is defined as
 \begin{equation}
 \mathcal{L}_{CCE}(\theta) =
--\sum_{b=1}^C
+-\sum_{c \in C}
 y_{c}\cdot \log(\hat y_{c}),
 \end{equation}
-where $C$ is the number of categories for the labels. The equation above is for a single-instance loss, so the corresponding empirical risk $\mathscr{L}_{CCE}$ for a mini-batch of size $B$ is
-
+where $C$ is the set of categories for the labels. The equation above is for a single-instance loss, so the corresponding empirical risk $\mathscr{L}_{CCE}$ for a mini-batch $B$ is
 \begin{equation}
 \mathscr{L}_{CCE}(\theta) =
--\frac{1}{B}\sum_{b=1}^B\sum_{b=1}^C
+-\frac{1}{\|B\|}\sum_{b \in B}\sum_{c \in C}
 y_{b,c}\cdot \log(\hat y_{b,c}).
 \end{equation}
 Minimizing this objective encourages the reward model to assign high probability to observed rewards and low probability to others, effectively learning a distribution over rewards.
 
 In many practical settings, the reward is binary, taking one of two labels (success or failure). In this case, Binary Cross-Entropy (BCE) loss is appropriate. The per-sample BCE loss $\mathcal{L}_{BCE}$ is
-
 \begin{equation}
 \mathcal{L}_{BCE}(\theta) =
 -y\cdot \log(\hat y) + 
 (1-y) \cdot \log(1-\hat y),
 \end{equation}
-and the corresponding empirical risk $\mathscr{L}_{BCE}$ over a mini-batch of size $B$ is
-
+and the corresponding empirical risk $\mathscr{L}_{BCE}$ over a mini-batch $B$ is
 \begin{equation}
 \mathscr{L}_{BCE}(\theta) =
--\frac{1}{B}\sum_{b=1}^B
+-\frac{1}{\|B\|}\sum_{b \in B}
 y_b\cdot \log(\hat y_b) + 
 (1-y_b) \cdot \log(1-\hat y_b).
 \end{equation}
 After training a reward model with BCE loss, the output represents the probability of receiving each of the two possible reward outcomes. For a binary reward system with values of $0$ or $1$, the expected reward simplifies to the probability of receiving $1$:
 
 \[
-\mathbb{E}_{r \sim R(x,a)}[r] = 0\cdot Pr(0|x,a) + 1\cdot Pr(1|x,a) = Pr(1|x,a)
+\mathbb{E}_{r \sim R(\cdot|x,a)}[r] = 0\cdot Pr(0|x,a) + 1\cdot Pr(1|x,a) = Pr(1|x,a)
 \]
 Since a reward of $1$ is generally associated with a successful action, the reward model can be interpreted as outputting the probability of success.
 
 \section{Regularization in Offline Reinforcement Learning}
+\label{Reg}
 Although Offline Reinforcement Learning is effective, it is not without limitations. A key challenge arises from the fact that optimization is performed on a static dataset. This can lead to overfitting, where the learned policy performs well on the observed data but fails to generalize to unseen situations when deployed in the real world. These failures arise because the policy exploits biases in the dataset, which may be incomplete or does not sufficiently cover the relevant state and action spaces. This is particularly problematic because Offline RL does not have the ability to correct these errors with environmental feedback like standard Online RL algorithms.
 
-To address these limitations, a common approach is to incorporate regularization into the learning process. In Offline RL, regularization refers to the addition of an extra term or function to the standard RL objective. This term is designed to penalize or encourage specific states, actions, or characteristics, effectively shaping the learned policy towards behaviors that are not fully represented in the dataset. The main idea is that the dataset is limited or biased, and the regularization term serves as a corrective mechanism, guiding the policy towards more favorable outcomes. Formally, for a policy $\pi_\phi$ parameterized by $\phi$ and a regularization function $\mathfrak{R}(\cdot)$, the regularized objective can then be written as
-
+To address these limitations, a common approach is to incorporate regularization into the learning process. In Offline RL, regularization refers to the addition of an extra term or function to the standard RL objective. This term is designed to penalize or encourage specific states, actions, or characteristics, effectively shaping the learned policy towards behaviors that are not fully represented in the dataset. The main idea is that the dataset is limited or biased, and the regularization term serves as a corrective mechanism, guiding the policy towards more favorable outcomes. Formally, for a policy $\pi_\phi$ parameterized by $\phi$ and a regularization function $\mathscr{R}(\cdot)$, the regularized objective can then be written as
 \begin{equation}
 J(\phi) = 
 \mathbb{E}_{x \sim p_x(\cdot)}
-\big[\mathcal{R} \big( x, \pi_\phi (x) \big) \big] + \mathscr{R}\mathfrak{R}(\cdot),
+\big[\mathcal{R} \big( x, \pi_\phi (x) \big) \big] + \mathscr{R}(\cdot),
 \label{Regularized Objective}
 \end{equation}
-where the regularization term $\mathfrak{R}(\cdot)$ can depend on any relevant variables, including the context $x$, action $a$, or even the policy $\pi_\phi$ itself. 
+where the regularization term $\mathscr{R}(\cdot)$ can depend on any relevant variables, including the context $x$, action $a$, or even the policy $\pi_\phi$ itself. 
 
-The regularization function $\mathfrak{R}(\cdot)$ is highly versatile and can be applied in multiple ways. For instance, adding a positive entropy term to the objective promotes stochasticity and encourages exploration in the policy, which is exemplified in \parencite{SAC}. Alternatively, regularization can be used to constrain the learned policy to remain close to the dataset distribution. An example from \parencite{f-Divergence} is the use of a negative $f$-divergence term, which penalizes deviations from the dataset and ensures the policy remains supported by the data. Overall, regularization is a powerful tool that can induce desirable behaviors and compensate for the limitations of Offline RL, all while maintaining computational and sample efficiency.
-
-% \section{Supervised Learning}
-% \section{Policy Optimization}
-% \section{Reinforcement Learning}
-% \subsection{Model-Free}
-% \section{REINFORCE}
-% \section{Ensemble Models}
+The regularization function $\mathscr{R}(\cdot)$ is highly versatile and can be applied in multiple ways. For instance, adding a positive entropy term to the objective promotes stochasticity and encourages exploration in the policy, which is exemplified in \parencite{SAC}. Alternatively, regularization can be used to constrain the learned policy to remain close to the dataset distribution. An example from \parencite{f-Divergence} is the use of a negative $f$-divergence term, which penalizes deviations from the dataset and ensures the policy remains supported by the data. Overall, regularization is a powerful tool that can induce desirable behaviors and compensate for the limitations of Offline RL, all while maintaining computational and sample efficiency.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

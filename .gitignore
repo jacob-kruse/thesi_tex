@@ -11,3 +11,4 @@ perl/*
 *.out
 *.run.xml
 *.toc
+*.loa

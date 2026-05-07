@@ -19,10 +19,11 @@ The proposed task is to autonomously sort recyclable items within a constrained 
 \begin{minipage}{\textwidth}
 \singlespacing
 \refstepcounter{algorithm}
-% \tagmcbegin{artifact}
+\addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}Sorting}
+\tagmcbegin{artifact}
 \hrule height 0.8pt
 \vspace{2pt}
-% \tagmcend{}
+\tagmcend{}
 \noindent\textbf{Algorithm \thealgorithm} Sorting \\[-9pt]
 \rule{\textwidth}{0.4pt}\\[-4pt]
 \label{Sorting Loop}
@@ -38,10 +39,10 @@ The proposed task is to autonomously sort recyclable items within a constrained 
     \State Robot opens gripper to drop item
 \EndWhile
 \end{algorithmic}
-% \tagmcbegin{artifact}
+\tagmcbegin{artifact}
 \vspace{2pt}
 \hrule
-% \tagmcend{}
+\tagmcend{}
 \end{minipage}
 
 \subsection{Context Estimation}

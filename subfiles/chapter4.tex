@@ -48,10 +48,11 @@ where $\beta$ is the uncertainty coefficient, a hyperparameter that controls the
 \noindent\begin{minipage}{\textwidth}
 \singlespacing
 \refstepcounter{algorithm}
-% \tagmcbegin{artifact}
+\addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}Train Expected Reward Ensemble}
+\tagmcbegin{artifact}
 \hrule height 0.8pt
 \vspace{2pt}
-% \tagmcend{}
+\tagmcend{}
 \noindent\textbf{Algorithm \thealgorithm} Train Expected Reward Ensemble \\[-9pt]
 \rule{\textwidth}{0.4pt}\\[-4pt]
 \label{Reward Ensemble}
@@ -70,10 +71,10 @@ where $\beta$ is the uncertainty coefficient, a hyperparameter that controls the
 \State Calculate uncertainty-penalized reward model: $\hat{\mathcal{R}}_{\theta} = \mu_\theta - \beta \cdot \sigma_\theta$ 
 \State \Return $\hat{\mathcal{R}}_{\theta}$
 \end{algorithmic}
-% \tagmcbegin{artifact}
+\tagmcbegin{artifact}
 \vspace{2pt}
 \hrule
-% \tagmcend{}
+\tagmcend{}
 \end{minipage}
 
 \section {Improved Policy Optimization}
@@ -170,10 +171,11 @@ This aggregated dataset is subsequently used to retrain the expected reward mode
 \begin{minipage}{\textwidth}
 \singlespacing
 \refstepcounter{algorithm}
-% \tagmcbegin{artifact}
+\addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}Policy Optimization}
+\tagmcbegin{artifact}
 \hrule height 0.8pt
 \vspace{2pt}
-% \tagmcend{}
+\tagmcend{}
 \noindent\textbf{Algorithm \thealgorithm} Policy Optimization \\[-9pt]
 \rule{\textwidth}{0.4pt}\\[-4pt]
 \label{Main Alg}
@@ -195,10 +197,10 @@ This aggregated dataset is subsequently used to retrain the expected reward mode
 \EndFor
 \State \Return $\pi_\phi$
 \end{algorithmic}
-% \tagmcbegin{artifact}
+\tagmcbegin{artifact}
 \vspace{2pt}
 \hrule
-% \tagmcend{}
+\tagmcend{}
 \end{minipage}
 
 \end{document}

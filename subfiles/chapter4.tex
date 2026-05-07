@@ -44,12 +44,20 @@ To account for this uncertainty, the uncertainty-penalized reward $\hat{\mathcal
 \label{Penalized Reward}
 \end{equation}
 where $\beta$ is the uncertainty coefficient, a hyperparameter that controls the strength of the penalty. When used for policy optimization, larger values of $\beta$ will lead to more conservative approximations of the expected reward, discouraging the policy from selecting actions in regions where the reward model is uncertain. This formulation can be interpreted as a lower confidence bound on the predicted expected reward. The training procedure for the ensemble is outlined in Algorithm \ref{Reward Ensemble}.
-\begin{algorithm}
-\caption{Train Expected Reward Ensemble}
+
+\noindent\begin{minipage}{\textwidth}
+\singlespacing
+\refstepcounter{algorithm}
+% \tagmcbegin{artifact}
+\hrule height 0.8pt
+\vspace{2pt}
+% \tagmcend{}
+\noindent\textbf{Algorithm \thealgorithm} Train Expected Reward Ensemble \\[-9pt]
+\rule{\textwidth}{0.4pt}\\[-4pt]
 \label{Reward Ensemble}
-\textbf{Inputs:} Dataset $\mathcal{D}$, Number of expected reward networks $N$, Uncertainty coefficient $\beta$
+\noindent\textbf{Inputs}: Dataset $\mathcal{D}$, Number of expected reward networks $N$, Uncertainty coefficient $\beta$
 \newline
-\textbf{Output}: Expected reward model $\hat{\mathcal{R}}_\theta$
+\noindent\textbf{Output}: Expected reward model $\hat{\mathcal{R}}_\theta$
 \begin{algorithmic}[1]
 \State Initialize $N$ expected reward networks $\bar{\mathcal{R}}_{\theta_1}, ..., \bar{\mathcal{R}}_{\theta_N}$ with random parameters $\theta_1,..., \theta_N$
 \For{$t = 1$ to $T$}
@@ -62,7 +70,11 @@ where $\beta$ is the uncertainty coefficient, a hyperparameter that controls the
 \State Calculate uncertainty-penalized reward model: $\hat{\mathcal{R}}_{\theta} = \mu_\theta - \beta \cdot \sigma_\theta$ 
 \State \Return $\hat{\mathcal{R}}_{\theta}$
 \end{algorithmic}
-\end{algorithm}
+% \tagmcbegin{artifact}
+\vspace{2pt}
+\hrule
+% \tagmcend{}
+\end{minipage}
 
 \section {Improved Policy Optimization}
 \label{Policy Optimization}
@@ -152,15 +164,22 @@ resulting in a progressively expanding dataset that combines random exploration,
 This aggregated dataset is subsequently used to retrain the expected reward model, allowing it to adapt to regions of the context-action space induced by the current policy. As a result, the expected reward approximator becomes progressively more accurate in high relevance regions. The improved expected reward model is then used re-optimize the policy, either reinforcing the current actions or steering the policy away from them. This iterative refinement helps mitigate errors arising from both the policy and the learned model, resulting in agent that is both sample and computational efficient while remaining effective. The overall procedure is presented in Figure \ref{Overall Algorithm} and summarized in Algorithm \ref{Main Alg}.
 \begin{figure}[h]
 \centering\includegraphics[width=0.75\textwidth]{figures/My RL.png}
-\caption{Iterative Reward Model and Policy Training. An exploration policy $\pi_\beta$ and expert policy $\pi_E$ interact with the environment to collect context-action-reward tuples, which are stored in the initial dataset $\mathcal{D}$. This dataset is used to train an approximate expected reward model $\hat{\mathcal{R}}_i$, which guides the optimization of a policy $\pi_i$. The learned policy $\pi_i$ is deployed in the environment to generate on-policy data and adds it to the dataset $\mathcal{D}$. The reward model $\hat{\mathcal{R}}_{i+1}$ is updated with the augmented dataset, and a new policy $\pi_{i+1}$ is optimized. This process repeats iteratively, progressively improving the reward model and policy.}
+\caption[Iterative Reward Model and Policy Training.]{Iterative Reward Model and Policy Training. An exploration policy $\pi_\beta$ and expert policy $\pi_E$ interact with the environment to collect context-action-reward tuples, which are stored in the initial dataset $\mathcal{D}$. This dataset is used to train an approximate expected reward model $\hat{\mathcal{R}}_i$, which guides the optimization of a policy $\pi_i$. The learned policy $\pi_i$ is deployed in the environment to generate on-policy data and adds it to the dataset $\mathcal{D}$. The reward model $\hat{\mathcal{R}}_{i+1}$ is updated with the augmented dataset, and a new policy $\pi_{i+1}$ is optimized. This process repeats iteratively, progressively improving the reward model and policy.}
 \label{Overall Algorithm}
 \end{figure}
-\begin{algorithm}
-\caption{Policy Optimization}
+\begin{minipage}{\textwidth}
+\singlespacing
+\refstepcounter{algorithm}
+% \tagmcbegin{artifact}
+\hrule height 0.8pt
+\vspace{2pt}
+% \tagmcend{}
+\noindent\textbf{Algorithm \thealgorithm} Policy Optimization \\[-9pt]
+\rule{\textwidth}{0.4pt}\\[-4pt]
 \label{Main Alg}
-\textbf{Inputs}: Number of reward networks $N$, Robustness coefficient $\alpha$, Uncertainty coefficient $\beta$
+\noindent\textbf{Inputs}: Number of reward networks $N$, Robustness coefficient $\alpha$, Uncertainty coefficient $\beta$
 \newline
-\textbf{Output}: Policy $\pi_\phi$
+\noindent\textbf{Output}: Policy $\pi_\phi$
 \begin{algorithmic}[1]
 \State Initialize policy network $\pi_\phi$ with random parameters $\phi$
 \State Fill initial dataset $\mathcal{D}_0$ with data from exploration policy $\pi_\beta$ and from expert policy $\pi_E$
@@ -176,6 +195,10 @@ This aggregated dataset is subsequently used to retrain the expected reward mode
 \EndFor
 \State \Return $\pi_\phi$
 \end{algorithmic}
-\end{algorithm}
+% \tagmcbegin{artifact}
+\vspace{2pt}
+\hrule
+% \tagmcend{}
+\end{minipage}
 
 \end{document}

@@ -3,15 +3,19 @@
 % arara: pdflatex
 % arara: pdflatex
 
-
-% TODO: Intro: End/Contributions/Structure, CE section of reward modeling
-
-
+\DocumentMetadata{
+  tagging=on,
+  tagging-setup={math/setup=mathml-SE},
+  pdfstandard=UA-2,
+  pdfversion=2.0,
+  lang=en-US
+}
 \documentclass[12pt, notitlepage, twoside]{report}
 
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{hyperref}
+\usepackage{bookmark}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{mathrsfs}
@@ -41,6 +45,13 @@
 % Title and Author Settings ================================================ %
 \newcommand{\doctitle}{Learning Robust Actions from Reward Modeling}
 \newcommand{\docauthor}{Jacob Kruse}
+\hypersetup{
+  pdftitle={\doctitle},
+  pdfauthor={\docauthor},
+  linkbordercolor=red,
+  citebordercolor=green,
+  urlbordercolor=blue
+}
 
 
 %--------------------------ABSTRACT---------------------------%

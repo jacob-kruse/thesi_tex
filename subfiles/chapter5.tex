@@ -13,15 +13,21 @@ This section describes the experimental framework used to evaluate the proposed 
 The proposed task is to autonomously sort recyclable items within a constrained workspace. The item set consists of aluminum cans and plastic bottles with varying degrees of deformation, which introduces variability in shape and grasp difficulty. The object manipulation is performed with a KUKA LBR iisy 3 r760 collaborative robotic arm equipped with an Ubiros Gentle Pro gripper at the end effector. The context of the workspace is captured using an overhead Oak-D S2 RGB-D camera, which provides synchronized color and depth images of the scene. These images are processed and encoded to form the input to the learned policy. The policy outputs continuous control actions for the manipulator, specifying the relative end effector placement. After executing the policy action with the corresponding motion trajectory, the robot automatically closes the gripper to secure the object, moves to the recycling bin, and opens the gripper to release any grasped object. An action is considered successful if the robot is able to securely grasp the assigned object and transport it to the recycling bin. The experimental setup is illustrated in Figure \ref{Workspace} and the overall sorting procedure is summarized in Algorithm \ref{Sorting Loop}.
 \begin{figure}[h]
 \centering\includegraphics[width=0.375\textwidth]{figures/Workspace Labeled.png}
-\caption{Experimental Setup. A KUKA robotic manipulator is used to grab aluminum cans and plastic bottles located on a conveyor belt. An Oak-D RGB-D camera captures images of the scene, from which the 3D position and orientation of each item is calculated. With this information, the manipulator executes grasping actions to move the recyclable items to a recycling bin}
+\caption[Experimental Setup.]{Experimental Setup. A KUKA robotic manipulator is used to grab aluminum cans and plastic bottles located on a conveyor belt. An Oak-D RGB-D camera captures images of the scene, from which the 3D position and orientation of each item is calculated. With this information, the manipulator executes grasping actions to move the recyclable items to a recycling bin}
 \label{Workspace}
 \end{figure}
-\begin{algorithm}
-\caption{Sorting}
+\begin{minipage}{\textwidth}
+\singlespacing
+\refstepcounter{algorithm}
+% \tagmcbegin{artifact}
+\hrule height 0.8pt
+\vspace{2pt}
+% \tagmcend{}
+\noindent\textbf{Algorithm \thealgorithm} Sorting \\[-9pt]
+\rule{\textwidth}{0.4pt}\\[-4pt]
 \label{Sorting Loop}
-\textbf{Input}: Learned policy $\pi_\phi$
-\begin{algorithmic}[1]
-\While {items in workspace}
+\noindent\textbf{Input}: Learned policy $\pi_\phi$
+\begin{algorithmic}[1]\While {items in workspace}
     \State Camera captures RGB and Depth images of the workspace
     \State Images are processed to obtain context $x$ and encoded context $\hat{x}$
     \State Robot moves to "Home" position
@@ -32,7 +38,11 @@ The proposed task is to autonomously sort recyclable items within a constrained 
     \State Robot opens gripper to drop item
 \EndWhile
 \end{algorithmic}
-\end{algorithm}
+% \tagmcbegin{artifact}
+\vspace{2pt}
+\hrule
+% \tagmcend{}
+\end{minipage}
 
 \subsection{Context Estimation}
 The context of the workspace is obtained using images from an overhead RGB-D camera. When the current context is requested, the camera captures an RGB image and a corresponding depth image of the workspace. The RGB image is passed through a YOLO v11 instance segmentation model, which produces pixel-wise masks of the aluminum cans and plastic bottles present in the scene. The YOLO model was trained on a combination of publicly available datasets containing annotated images of general cans and bottles, as well as a custom dataset containing images collected directly from the workspace with manual annotation. Incorporating general and task-specific data enables the model to generalize and maintain accuracy for specific objects with the instance segmentation procedure. 
@@ -44,27 +54,27 @@ The corresponding depth image is then used to recover the 3D position of the cen
 The principal axis obtained from PCA defines the object's yaw angle in the robot frame. However, for a complete 6D pose representation, the pitch angle must also be estimated. To compute the pitch, a two-point method is employed. Two points are selected near opposite ends of the object along the principal axis. The 3D positions of these points are recovered from the depth image using the same strategy applied to the centroid. Let the vertical difference between the two points be $\Delta z$, and let the planar displacement in the $xy$-plane be $\Delta xy$. The pitch angle is then computed by $\omega=\arctan{\frac{\Delta z}{\Delta xy}}$, which provides a measure of the object's incline relative to the workspace plane. Due to assumed axial symmetry of the bottles and cans, the roll angle is assumed to be zero. Therefore, the full 6D pose of the each object is defined by the 3D position of the centroid and the estimated pitch and yaw angles.
 \begin{figure}[h]
     \centering
-    \begin{minipage}[c]{0.32\textwidth}
+    \begin{subfigure}{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figures/OG Bottles and Cans.png}
         \subcaption{}
         \label{OG}
-    \end{minipage}
+    \end{subfigure}
     \hspace{0.01\textwidth}
-    \begin{minipage}[c]{0.32\textwidth}
+    \begin{subfigure}{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figures/Masks.png}
         \subcaption{}
         \label{Masks}
-    \end{minipage}
+    \end{subfigure}
     \hspace{0.01\textwidth}
-    \begin{minipage}[c]{0.32\textwidth}
+    \begin{subfigure}{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figures/PCA.png}
         \subcaption{}
         \label{PCA}
-    \end{minipage}
-    \caption{Context Estimation. Figure~\ref{OG} shows the original RGB image. This image is passed through a YOLO v$11$ instance segmentation model to obtain masks of the bottles and cans, as shown in Figure~\ref{Masks}. Principal Componet Analysis (PCA) is performed on the masks to determine the centroid and principal axes, shown in Figure~\ref{PCA}}
+    \end{subfigure}
+    \caption[Context Estimation.]{Context Estimation. Figure~\ref{OG} shows the original RGB image. This image is passed through a YOLO v$11$ instance segmentation model to obtain masks of the bottles and cans, as shown in Figure~\ref{Masks}. Principal Componet Analysis (PCA) is performed on the masks to determine the centroid and principal axes, shown in Figure~\ref{PCA}}
     \label{State Estimation}
 \end{figure}
 
@@ -93,27 +103,27 @@ Because the true context space is continuous, there are infinitely many possible
 where $q \in \{ 1,2,3,4 \}$ denotes the spatial quadrant of the object, $\Omega \in \{ 1,2,3 \}$ represents the discretized pitch bin, $\Psi \in \{ 1,2,3,4 \}$ denotes the discretized yaw bin, and $t$ represents the object type. This encoding provides a simplified yet informative summary of the object and reduces the continuous context to a compact representation that is suitable for reward modeling and policy learning. Figure \ref{Discretized Workspace} shows the discretized workspace along with an example of an item mapped to the corresponding quadrant and orientation bins. Although an encoded, discretized context $\mathbf{\hat{x}}$ is produced, the true context $\mathbf{x}$ is preserved to build an absolute pose for the gripper from the relative action (see Section \ref{Action Definition}).
 \begin{figure}[h]
     \centering
-    \begin{minipage}[c]{0.49\textwidth}
+    \begin{subfigure}{0.49\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figures/Quadrants.png}
         \subcaption{}
         \label{Quadrants}
-    \end{minipage}
+    \end{subfigure}
     \hspace{0.01\textwidth}
-    \begin{minipage}[c]{0.49\textwidth}
+    \begin{subfigure}{0.49\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figures/Slices.png}
         \subcaption{}
         \label{Yaw Bin}
-    \end{minipage}
+    \end{subfigure}
     \\[0.25cm]
-    \begin{minipage}[c]{0.5\textwidth}
+    \begin{subfigure}{0.5\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figures/Sectors.png}
         \subcaption{}
         \label{Pitch Bin}
-    \end{minipage}
-    \caption{Discretized Workspace: Figure~\ref{Quadrants} shows the xy-plane of the workspace divided into four quadrants. In this example, the bottle is located in the second quadrant. Figure~\ref{Yaw Bin} illustrates the discretization of the possible yaw angles into four bins; the bottle falls within the first bin in this example. Similarly, the possible pitch angles are discretized into three bins, with the bottle located in the first bin, as shown in Figure~\ref{Pitch Bin}.}
+    \end{subfigure}
+    \caption[Discretized Workspace.]{Discretized Workspace: Figure~\ref{Quadrants} shows the xy-plane of the workspace divided into four quadrants. In this example, the bottle is located in the second quadrant. Figure~\ref{Yaw Bin} illustrates the discretization of the possible yaw angles into four bins; the bottle falls within the first bin in this example. Similarly, the possible pitch angles are discretized into three bins, with the bottle located in the first bin, as shown in Figure~\ref{Pitch Bin}.}
     \label{Discretized Workspace}
 \end{figure}
 
@@ -144,7 +154,7 @@ To ensure that the robot only attempts potentially successful grasps, each compo
 These bounds not only prevent the agent from proposing actions that will never lead to success, but they also shrink the action space significantly. In addition to these restrictions on the relative actions, the computed absolute pose is also clamped to the same bounds defined for the context (Section \ref{Context Definition}).
 \begin{figure}[h]
 \centering\includegraphics[width=0.5\textwidth]{figures/Local Axis.png}
-\caption{Local Coordinate Frame. The yellow dot on the bottle represents its centroid, while the red, green, and blue axes indicate the positive directions of the object's local $x$, $y$, and $z$ axes, respectively. An action containing a $+\Delta l$ component would produce a translation along the red axis, starting from the yellow dot.}
+\caption[Local Coordinate Frame.]{Local Coordinate Frame. The yellow dot on the bottle represents its centroid, while the red, green, and blue axes indicate the positive directions of the object's local $x$, $y$, and $z$ axes, respectively. An action containing a $+\Delta l$ component would produce a translation along the red axis, starting from the yellow dot.}
 \label{Local Axis}
 \end{figure}
 
@@ -158,28 +168,28 @@ A binary reward setup is effective for evaluating the method because multiple ac
 % As mentioned earlier, the goal of the initial data collection phase is to produce a dataset with diverse states, actions, and rewards. To achieve this, data was collected from both an expert and a random policy to ensure a mix of successful and unsuccessful interactions. Expert data was generated by hand-guiding the KUKA collaborative robot to a variety of feasible grasp poses for the assigned object. With this teaching process, $160$ expert demonstrations were produced, corresponding to five demonstrations per state. Additionally, a random policy was implemented, sampling actions uniformly within the action bounds. Executing this policy yielded $340$ additional interactions with mainly unsuccessful attempts to provide negative reward examples. Together, the expert and random data form an initial dataset of $500$ interactions, containing both high quality grasps and exploration failures to produce an effective initial reward model.
 \begin{figure}[h]
     \centering
-    \begin{minipage}[c]{0.32\textwidth}
+    \begin{subfigure}{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figures/Reward Comparison.png}
         \subcaption{}
         \label{Reward Comparison}
-    \end{minipage}
+    \end{subfigure}
     \hspace{0.01\textwidth}
-    \begin{minipage}[c]{0.32\textwidth}
+    \begin{subfigure}{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figures/Noisy Reward Comparison.png}
         \subcaption{}
         \label{Noisy Reward Comparison}
-    \end{minipage}
+    \end{subfigure}
     \hspace{0.01\textwidth}
-    \begin{minipage}[c]{0.32\textwidth}
+    \begin{subfigure}{0.32\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figures/Double Noisy Reward Comparison.png}
         \subcaption{}
         \label{Double Noisy Reward Comparison}
-    \end{minipage}
+    \end{subfigure}
 
-    \caption{Expected Reward Comparisons: Each figure illustrates the expected reward $\mathcal{R}$ for a given state as the $\Delta w$ component of the action is varied, comparing two policies trained on the same expected reward model. The blue lines correspond to the base action of the policy trained with the modified objective proposed in this work, while the orange lines show the same for the policy trained with the standard learning objective. The blue dot and orange dot indicate the respective base actions for each policy. Figure \ref{Reward Comparison} directly compares the expected rewards of the base actions from both policies. Figures \ref{Noisy Reward Comparison} and \ref{Double Noisy Reward Comparison} show how the expected rewards change after applying the same adversarial perturbation to each action. Specifically, Figure \ref{Noisy Reward Comparison} shows the effect of perturbating the action dimensions by $1$ cm and $6^\circ$, while Figure \ref{Double Noisy Reward Comparison} shows the effect of larger perturbations of $2$ cm and $12^\circ$.}
+    \caption[Expected Reward Comparisons for different policy training objectives.]{Expected Reward Comparisons: Each figure illustrates the expected reward $\mathcal{R}$ for a given state as the $\Delta w$ component of the action is varied, comparing two policies trained on the same expected reward model. The blue lines correspond to the base action of the policy trained with the modified objective proposed in this work, while the orange lines show the same for the policy trained with the standard learning objective. The blue dot and orange dot indicate the respective base actions for each policy. Figure \ref{Reward Comparison} directly compares the expected rewards of the base actions from both policies. Figures \ref{Noisy Reward Comparison} and \ref{Double Noisy Reward Comparison} show how the expected rewards change after applying the same adversarial perturbation to each action. Specifically, Figure \ref{Noisy Reward Comparison} shows the effect of perturbating the action dimensions by $1$ cm and $6^\circ$, while Figure \ref{Double Noisy Reward Comparison} shows the effect of larger perturbations of $2$ cm and $12^\circ$.}
     \label{Expected Reward Comparisons}
 \end{figure}
 

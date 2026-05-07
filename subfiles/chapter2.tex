@@ -33,7 +33,7 @@ However, a central challenge with Offline RL is distribution shift. During train
 Although the method presented in this paper incorporates principles from Offline RL, it does not implement a pure offline approach. The learned policy $\pi$ is subsequently deployed in the environment to acquire more data, which is then used to iteratively refine the reward model and policy. Despite this, the strategy of regularization formed a primary inspiration for this work. The combination of offline training with online data collection gives this method the efficiency of Offline RL while also addressing the limitations of static datasets.
 \begin{figure}[h]
 \centering\includegraphics[width=0.75\textwidth]{figures/Off RL.png}
-\caption{Offline Reinforcement Learning. An exploration policy $\pi_\beta$ interacts with the environment to collect a dataset of state-action transitions and rewards, which is stored in the buffer $\mathcal{D}$. This dataset is used to train a policy $\pi$, which is then deployed in the environment without further interaction.}
+\caption[Offline Reinforcement Learning.]{Offline Reinforcement Learning. An exploration policy $\pi_\beta$ interacts with the environment to collect a dataset of state-action transitions and rewards, which is stored in the buffer $\mathcal{D}$. This dataset is used to train a policy $\pi$, which is then deployed in the environment without further interaction.}
 \label{Off RL}
 \end{figure}
 
@@ -48,7 +48,7 @@ In addition to ensemble methods, many Model-Based RL methods adopt iterative mod
 Although the proposed approach is related to Model-Based RL, it does not explicitly model a transition function. Instead, the method focuses on learning a reward model, which estimates the expected return of actions directly. Using the reward predictions, the policy can be optimized without the need for modeling state transitions. Despite this distinction, the approach adopts ideas from Model-Based RL, including the use of ensemble networks to capture uncertainty and iterative model improvement to enhance model accuracy.
 \begin{figure}[h]
 \centering\includegraphics[width=0.85\textwidth]{figures/MBRL.png}
-\caption{Model-Based Reinforcement Learning. A policy $\pi_k$ is executed in the real world to collect data, which populates the real world buffer $\mathcal{D}$. This data is used to learn an approximate transition function $\hat{T}_k$. The learned transition function is used to generate a simulated dataset $\hat{\mathcal{D}}$, which is combined with the real-world dataset $\mathcal{D}$ to update the policy $\pi_{k+1}$. This iterative process improves sample efficiency by utilizing simulated data while grounding learning in real world experience.}
+\caption[Model-Based Reinforcement Learning.]{Model-Based Reinforcement Learning. A policy $\pi_k$ is executed in the real world to collect data, which populates the real world buffer $\mathcal{D}$. This data is used to learn an approximate transition function $\hat{T}_k$. The learned transition function is used to generate a simulated dataset $\hat{\mathcal{D}}$, which is combined with the real-world dataset $\mathcal{D}$ to update the policy $\pi_{k+1}$. This iterative process improves sample efficiency by utilizing simulated data while grounding learning in real world experience.}
 \label{MBRL}
 \end{figure}
 

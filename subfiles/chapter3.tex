@@ -20,7 +20,7 @@ where $\mathcal{X}$ denotes the context space, $\mathcal{A}$ represents the acti
 
     \item \textbf{Action Space:} The action space $\mathcal{A}$ is the set of all possible actions available to the agent. Given a context $x$, the agent selects an action $a \in \mathcal{A}$ and executes it in the environment. The action may also be discrete, continuous, or multi-dimensional.
 
-    \item \textbf{Reward Function:} The reward function $R$ is used to determine the reward $r$ after each round. The reward function $R$ is a function of the context $x$ and action $a$ and returns a distribution of real-valued rewards $R: \mathcal{X} \times \mathcal{A} \to \Delta_\mathbb{R}$. The observed reward $r$ is then sampled from the reward function $r \sim  R(\cdot|x,a)$ during each round. The underlying reward distribution induces an expected reward function $\mathcal{R}(x,a)=\mathbb{E}_{r \sim R(\cdot|x,a)}[r]$, which represents the average reward for each state-action pair.
+    \item \textbf{Reward Function:} The reward function $R$ is used to determine the reward $r$ after each round. The reward function $R$ is a function of the context $x$ and action $a$ and returns a distribution of real-valued rewards $R: \mathcal{X} \times \mathcal{A} \to \Delta_\mathbb{R}$. The observed reward $r$ is then sampled from the reward function $r \sim  R(\cdot|x,a)$ during each round. The underlying reward distribution induces an expected reward function $\mathcal{R}(x,a)=\mathbb{E}_{r \sim R(\cdot|x,a)}[r]$, which represents the average reward for each context-action pair.
 
 \end{itemize}
 

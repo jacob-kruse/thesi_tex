@@ -6,13 +6,14 @@
 \DocumentMetadata{
   tagging=on,
   tagging-setup={math/setup=mathml-SE},
-  pdfstandard=UA-2,
-  pdfversion=2.0,
-  lang=en-US
+  pdfstandard=UA-1,
+  pdfversion=1.7,
+  lang=en-US,
+  % testphase=phase-III
 }
 \documentclass[12pt, notitlepage, twoside]{report}
 
-\usepackage{amsmath,amssymb}
+\usepackage{amsmath,amssymb, amsthm}
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{bookmark}
@@ -20,6 +21,12 @@
 \usepackage{algpseudocode}
 \usepackage{mathrsfs}
 \usepackage{subcaption}
+\usepackage{multirow}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{assumption}{Assumption}
+\newtheorem{definition}{Definition}
 
 % Document Metafiles (Do Not Reorder!) ===================================== %
 \input{metafiles/preamble.tex}
@@ -57,7 +64,7 @@
 %--------------------------ABSTRACT---------------------------%
 \input{metafiles/abstractpage.tex}
 \makeabstract{%
-This section of the page is where your abstract will go. Fill in this spot in the dissertation.tex file with your abstract. Doctoral 350 words max, 150 max for masters.
+Reinforcement learning (RL) has shown strong performance in simulation, but applying RL to real-world robotic tasks remains challenging due to environmental uncertainty, high-dimensionality, data collection, and safety considerations. Incorporating strategies from Robust, Offline, and Model-Based RL, this work proposes a policy learning framework for Contextual Bandit settings to tackle the many challenges of real-world RL. An initial data collection strategy is implemented to promote sample diversity and efficiency. An ensemble of reward networks are trained on the data and used to predict the expected reward and to penalize uncertain estimates. To improve robustness, a new objective called the Perturbed Action Robustness (PAR) objective is introduced, encouraging policies to select actions that achieve high reward and remain stable under action perturbations. The method further incorporates iterative deployment and data aggregation to continuously refine the reward model and policy. Experimental results in a custom Gym environment and a real-world robotic task demonstrate that the proposed approach improves policy performance compared to baseline methods.
 }%
 
 

@@ -2,14 +2,13 @@
 \begin{document}
 
 \chapter{Foundational Concepts}
-This chapter reviews the fundamental principles and methods that define this work, providing the necessary background for understanding the techniques presented later. Section \ref{Framework} introduces Contextual Bandits, a framework for context-aware, action-selecting agents. Section \ref{PGRL} discusses Policy Gradient Reinforcement Learning, highlighting the basics of policy optimization with the gradient of the learning objective. Section \ref{RFM} describes the process of modeling the expected reward function, emphasizing the estimation of unknown reward distributions through self-supervised learning. Finally, Section \ref{Reg} introduces regularization in RL, explaining how it can improve the policies learned from static datasets. Together, these preliminaries establish the theoretical and practical foundation for the approach developed in this work.
+This chapter reviews the fundamental principles and methods that define this work, providing the necessary background for understanding the techniques presented later. Section \ref{Framework} introduces contextual bandits, a framework for context-aware, action-selecting agents. Section \ref{PGRL} discusses policy gradient reinforcement learning, highlighting the basics of policy optimization with the gradient of the learning objective. Section \ref{RFM} describes the process of modeling the expected reward function, emphasizing the estimation of unknown reward distributions through self-supervised learning. Finally, Section \ref{Reg} introduces regularization in RL, explaining how it can improve the policies learned from static datasets. Together, these preliminaries establish the theoretical and practical foundation for the approach developed in this work.
 
 \section{Contextual Bandits}
 \label{Framework}
-The Multi-Armed Bandit \parencite{MABandit} framework is one of the most widely used models for decision making under uncertainty. In this setting, a single agent chooses from $K$ arms or actions in each round and receives a reward from an unknown distribution associated with the chosen arm. After observing the reward, the agent repeats this process by selecting from the same set of arms, making it a sequential problem with inherent uncertainty. The objective is to both learn the reward distribution of each arm and to maximize the expected reward.
-% The Multi-Armed Bandit was named this due to the similarity to a slot machine, which is a bandit with one arm that leads to an unknown reward.
+The multi-armed bandit \parencite{MABandit} framework is one of the most widely used models for decision making under uncertainty. In this setting, a single agent chooses from $K$ arms or actions in each round and receives a reward from an unknown distribution associated with the chosen arm. After observing the reward, the agent repeats this process by selecting from the same set of arms, making it a sequential problem with inherent uncertainty. The objective is to both learn the reward distribution of each arm and to maximize the expected reward.
 
-A common extension of the Multi-Armed Bandit model is the Contextual Bandit framework \parencite{CBandit}. Similar to the previous formulation, the agent chooses from a set of $K$ arms or actions; however, in this case, the reward distribution now depends on an observed context. Despite this added structure, the goal of the Contextual Bandit problem remains the same as the Multi-Armed Bandit, to maximize reward in a stochastic and unknown environment. The Contextual Bandit (CB) can be formally defined with the tuple
+A common extension of the multi-armed bandit model is the contextual bandit framework \parencite{CBandit}. Similar to the previous formulation, the agent chooses from a set of $K$ arms or actions; however, in this case, the reward distribution now depends on an observed context. Despite this added structure, the goal of the contextual bandit problem remains the same as the multi-armed bandit, to maximize reward in a stochastic and unknown environment. The contextual bandit (CB) can be formally defined with the tuple
 \begin{equation}
 \text{CB} = \langle \mathcal{X}, \mathcal{A}, R \rangle,
 \end{equation}
@@ -28,46 +27,46 @@ In order to determine which actions to take in each context, the agent implement
 
 \section{Policy Gradient Reinforcement Learning}
 \label{PGRL}
-Reinforcement Learning (RL) \parencite{RL} is one of the most extensively studied paradigms in artificial intelligence. It can be described as the process of an agent learning rational, favorable behavior through interactions with its environment. A wide variety of techniques fall under the umbrella of RL, but they are generally categorized into two broad classes: Model-Based and Model-Free methods. In Model-Based RL (see Section \ref{MBRL Paragraph}), the agent tries to learn a model of the environment and uses this model for planning or predicting outcomes. In contrast, Model-Free RL bypasses the need for a model and aims to learn through direct interaction with the environment. Model-Free methods are highly popular due to their simplicity, robustness, and ability to scale to complex domains.
+Reinforcement learning \parencite{RL} is one of the most extensively studied paradigms in artificial intelligence. It can be described as the process of an agent learning rational, favorable behavior through interactions with its environment. A wide variety of techniques fall under the umbrella of RL, but they are generally categorized into two broad classes: model-based and model-free methods. In model-based RL (see Section \ref{MBRL Paragraph}), the agent tries to learn a model of the environment and uses this model for planning or predicting outcomes. In contrast, model-free RL bypasses the need for a model and aims to learn through direct interaction with the environment. Model-free methods are highly popular due to their simplicity, robustness, and ability to scale to complex domains.
 
-To take this a step further, Model-Free RL methods can be divided even further into Policy Gradient, Value-Based, and Actor-Critic techniques. In Policy Gradient approaches, the agent directly optimizes its policy by interacting with the environment and using the observed rewards to guide policy updates. These approaches are well-suited for continuous action spaces, as they focus solely on the policy, but are generally restricted to being on-policy due to the nature of policy optimization. In contrast, Value-Based RL methods focus on learning a function that estimates the value of states or actions, which is then used to guide action selection. These methods are typically more sample-efficient than Policy Gradient techniques because they can reuse past data, but they can struggle with large or continuous state and action spaces. Finally, Actor-Critic methods combine the strengths of Policy Gradient and Value-Based approaches. In this framework, the actor represents the policy and the critic refers to the value function. The feedback of the critic is used to update the actor, leading to more stable and efficient learning compared to the either method alone.
+Furthermore, model-free RL methods can be divided even further into policy gradient, value-based, and actor-critic techniques. In policy gradient approaches, the agent directly optimizes its policy by interacting with the environment and using the observed rewards to guide policy updates. These approaches are well-suited for continuous action spaces, as they focus solely on the policy, but are generally restricted to being on-policy due to the nature of policy optimization. In contrast, value-based RL methods focus on learning a function that estimates the value of states or actions, which is then used to guide action selection. These methods are typically more sample-efficient than policy gradient techniques because they can reuse past data, but they can struggle with large or continuous state and action spaces. Finally, actor-critic methods combine the strengths of policy gradient and value-based approaches. In this framework, the actor represents the policy and the critic refers to the value function. The feedback of the critic is used to update the actor, leading to more stable and efficient learning compared to the either method alone.
 
-Despite the wide variety of RL algorithms, the underlying learning objective remains the same: to find a policy $\pi$ that maximizes the expected reward. The most general form of the learning objective is defined with the Markov Decision Process (MDP) framework \parencite{MDP}, and is commonly expressed as
+Despite the wide variety of RL algorithms, the underlying learning objective remains the same: to find a policy $\pi$ that maximizes the expected reward. The most general form of the learning objective is defined with the Markov decision process (MDP) framework \parencite{MDP}, and is commonly expressed as
 \begin{equation}
-J(\pi) = \mathbb{E}_{s_0 \sim \rho_s, \ a_t \sim \pi(\cdot|s_t), \ s_{t+1} \sim T(\cdot|s_t,a_t)}
-\Big[\sum_{t=1}^\infty R(s_t,a_t)\Big],
+J(\pi) = \mathbb{E}_{s_0 \sim \rho_s, \ a_t \sim \pi(\cdot|s_t), \ s_{t+1} \sim \mathcal{T}(\cdot|s_t,a_t)}
+\Bigg[\sum_{t=1}^\infty R(s_t,a_t)\Bigg],
 \end{equation}
-where the initial state $s_0$ is sampled from the state distribution $\rho_s$, actions $a_t$ are sampled from the stochastic policy $\pi$, resulting states $s_{t+1}$ are sampled from the stochastic transition function $T$, and rewards are given by the reward function $R$ which is assumed to be deterministic.
+where the initial state $s_0$ is sampled from the state distribution $\rho_s$, actions $a_t$ are sampled from the stochastic policy $\pi$, resulting states $s_{t+1}$ are sampled from the stochastic transition function $\mathcal{T}$, and rewards are given by the reward function $R$ which is assumed to be deterministic.
 
-To adapt this learning objective to the Contextual Bandit setting, some changes need to be made. Since Contextual Bandits involve no state/context transitions and no notion of sequential decision-making, the transition function $T$ and the summation over all time steps in an episode can be removed. Additionally, the reward function is typically modeled as stochastic rather than deterministic, with observed rewards sampled as $r \sim R(\cdot|x,a)$. This can be handled either by taking an expectation over sampled rewards or, equivalently, by directly using the expected reward function $\mathcal{R}$, which simplifies the formulation while remaining consistent with the original objective.
+To adapt this learning objective to the contextual bandit setting, some changes need to be made. Since contextual bandits involve no state/context transitions and no notion of sequential decision-making, the transition function $\mathcal{T}$ and the summation over all time steps in an episode can be removed. Additionally, the reward function is typically modeled as stochastic rather than deterministic, with observed rewards sampled as $r \sim R(\cdot|x,a)$. This can be handled either by taking an expectation over sampled rewards or by directly using the expected reward function $\mathcal{R}$. The latter simplifies the formulation while remaining consistent with the original deterministic reward assumption, allowing scalar reward values to be used directly.
 
-On top of all this, let's consider the implementation of a deterministic policy, where each context $x$ is mapped to a fixed action $a = \pi(x)$. Under these modifications, the learning objective becomes
+In addition to the following changes, let's consider the implementation of a deterministic policy, where each context $x$ is mapped to a fixed action $a = \pi(x)$. Under these modifications, the learning objective becomes
 \begin{equation}
 J(\pi) = \mathbb{E}_{x \sim \rho_x}\Big[\mathcal{R}\big(x,\pi(x)\big)\Big],
 \label{J}
 \end{equation}
-where contexts $x$ are sampled from the context distribution $\rho_x$, rewards are given by the expected reward function $\mathcal{R}$, and actions are deterministically selected by the policy $\pi$. Although Contextual Bandits may employ either stochastic or deterministic policies, this work focuses on deterministic policies; therefore, Equation \ref{J} is adopted as the learning objective. Under this formulation, the optimal policy $\pi^\star$ is defined as the policy that maximizes expected reward:
+where contexts $x$ are sampled from the context distribution $\rho_x$, rewards are given by the expected reward function $\mathcal{R}$, and actions are deterministically selected by the policy $\pi$. Although contextual bandits may employ either stochastic or deterministic policies, this work focuses on deterministic policies; therefore, Equation \ref{J} is adopted as the learning objective. Under this formulation, the optimal policy $\pi^\star$ is defined as the policy that maximizes expected reward:
 \begin{equation}
 \pi^\star = 
 \arg\max_{\pi} J(\pi).
 \end{equation}
 
-With the advancement of Deep Reinforcement Learning \parencite{DeepRL}, it has become increasingly common to represent policies using neural networks. A neural network \parencite{NN} can be described as a parameterized function composed of multiple layers and interconnected nodes, where each layer applies weights, biases, and activation functions. After receiving an input, the network propagates it through its layers to produce an output. In the RL setting, the neural network acts as the policy, taking a state or context representation as input and producing an action or distribution over actions as output. The use of these networks enables highly expressive, nonlinear function approximation, allowing policies and value functions to handle high-dimensional and complex domains. When a policy is parameterized by a neural network with parameters $\phi$, it is denoted as $\pi_\phi$. The learning objective can then be written as a function of these parameters:
+With the advancement of deep reinforcement learning \parencite{DeepRL}, it has become increasingly common to represent policies using neural networks. A neural network \parencite{NN} can be described as a parameterized function composed of multiple layers and interconnected nodes, where each layer applies weights, biases, and activation functions. After receiving an input, the network propagates it through its layers to produce an output. In the RL setting, the neural network acts as the policy, taking a state or context representation as input and producing an action or distribution over actions as output. The use of these networks enables highly expressive, nonlinear function approximation, allowing policies and value functions to handle high-dimensional and complex domains. When a policy is parameterized by a neural network with parameters $\phi$, it is denoted as $\pi_\phi$. The learning objective can then be written as a function of these parameters:
 \begin{equation}
 J(\phi) = \mathbb{E}_{x \sim \rho_x}\Big[\mathcal{R}\big(x,\pi_\phi(x) \big)\Big].
 \end{equation}
 Importantly, the objective itself has not changed, but instead, it is now expressed in terms of the parameters $\phi$ that represent the policy. This shift is crucial, as it transforms the reinforcement learning problem into an optimization problem over the parameter space.
 
-This change gives rise to the central idea behind Policy Gradient methods, which is to optimize the parameters $\phi$ using the gradient of the objective. More specifically, the goal is to iteratively update the parameters $\phi$ in the direction of the gradient $\nabla_\phi J(\phi)$, which quantifies how changes in the parameters affect the expected reward. For the Contextual Bandit setting, the deterministic policy gradient can be expressed as a modification of the original formulation in \parencite{DPG}:
+This change gives rise to the central idea behind policy gradient methods, which is to optimize the parameters $\phi$ using the gradient of the objective. More specifically, the goal is to iteratively update the parameters $\phi$ in the direction of the gradient $\nabla_\phi J(\phi)$, which quantifies how changes in the parameters affect the expected reward. For the contextual bandit setting, the deterministic policy gradient can be expressed as a modification of the original formulation in \parencite{DPG}:
 \begin{equation}
 \nabla_\phi J(\phi) =
 \mathbb{E}_{x \sim \rho_x}
-\Big[\nabla_\phi \pi_\phi(x) \cdot \nabla_a \mathcal{R}(x,a) |_{a=\pi_\phi(x)} \Big].
+\Big[\nabla_\phi \pi_\phi(x) \cdot \nabla_a \mathcal{R}(x,a) \big|_{a=\pi_\phi(x)} \Big].
 \label{GJ}
 \end{equation}
-This expression differs from the original deterministic policy gradient formulation because it is adapted to the Contextual Bandit setting rather than the MDP framework \parencite{MDP}. In a standard MDP, the policy gradient depends on the Q-function $Q(s,a)$, which represents the total discounted sum of future rewards starting from state $s$ and taking action $a$. The Q-function captures transition dynamics and is required to propagate future rewards back to earlier actions. However, Contextual Bandits have no state or context transitions, so the policy does not need to account for future outcomes. As a result, the Q-function $Q$ can be replaced by the immediate expected reward function $\mathcal{R}$, allowing the deterministic policy gradient to be applied directly to Contextual Bandits.
+This expression differs from the original deterministic policy gradient formulation because it is adapted to the contextual bandit setting rather than the MDP framework \parencite{MDP}. In a standard MDP, the policy gradient depends on the Q-function $Q(s,a)$, which represents the total discounted sum of future rewards starting from state $s$ and taking action $a$. The Q-function captures transition dynamics and is required to propagate future rewards back to earlier actions. However, contextual bandits have no state or context transitions, so the policy does not need to account for future outcomes. As a result, the Q-function $Q$ can be replaced by the immediate expected reward function $\mathcal{R}$, allowing the deterministic policy gradient to be applied directly to contextual bandits.
 
-Policy Gradient methods use the gradient of the learning objective to directly optimize the policy parameters. More specifically, the algorithm performs gradient ascent, adjusting the policy parameters in the direction that increases the expected reward. At each update step, the parameters are adjusted according to 
+Policy gradient methods use the gradient of the learning objective to directly optimize the policy parameters. More specifically, the algorithm performs gradient ascent, adjusting the policy parameters in the direction that increases the expected reward. At each update step, the parameters are adjusted according to 
 \begin{equation}
 \phi_{k+1} = \phi_k + \lambda \cdot \nabla_{\phi_k} J(\phi_k),
 \end{equation}
@@ -78,22 +77,20 @@ In practice, the gradient of the learning objective cannot be calculated exactly
 \nabla_\phi J(\phi) \approx  
 \frac{1}{\|\mathcal{D}_{\pi_\phi}\|} \sum_{\ \ \ b \in \mathcal{D}_{\pi_\phi}}
 \nabla_\phi \pi_\phi(x_b) \cdot 
-\nabla_a \mathcal{R}(x_b,a_b) |_{a_b=\pi_\phi(x_b)}.
+\nabla_a \mathcal{R}(x_b,a_b) \big|_{a_b=\pi_\phi(x_b)}.
 \label{AGJ}
 \end{equation}
-This expression is an unbiased Monte Carlo estimate of the true gradient. Although this estimate does not yield the exact gradient, it is is sufficiently accurate to guide parameter updates in Policy Gradient methods, allowing the agent to iteratively improve its policy.
-
-% The method in this paper was designed to be applied to a one-step, no horizon task, which is described in the Experiments \ref{Experiments} section. 
+This expression is an unbiased Monte Carlo estimate of the true gradient. Although this estimate does not yield the exact gradient, it is is sufficiently accurate to guide parameter updates in policy gradient methods, allowing the agent to iteratively improve its policy.
 
 \section{Reward Modeling}
 \label{RFM}
-The reward function $R$ for a Contextual Bandit, defined in Section \ref{Framework}, is stochastic and returns a distribution over real-valued rewards. After taking action $a$ in context $x$, the observed reward $r$ is sampled from this distribution $r \sim R(\cdot|x,a)$. The expected reward function $\mathcal{R}$ can be used equivalently to represent the sampled rewards, but it instead returns a scalar value. Because of this, if the expected reward function is known, the policy can use it directly for optimization by calculating the gradient with Equations \ref{GJ} or \ref{AGJ}.
+The reward function $R$ for a contextual bandit, defined in Section \ref{Framework}, is stochastic and returns a distribution over real-valued rewards. After taking action $a$ in context $x$, the observed reward $r$ is sampled from this distribution $r \sim R(\cdot|x,a)$. The expected reward function $\mathcal{R}$ can be used equivalently to represent the sampled rewards, but it instead returns a scalar value. Because of this, if the expected reward function is known, the policy can use it directly for optimization by calculating the gradient with Equations \ref{GJ} or \ref{AGJ}.
 
 In many practical settings, however, the true reward function is unknown and must be inferred through interactions with environment. One approach is to learn a policy directly from past experience and utilize importance sampling \parencite{IS}. Since this experience is collected under an exploration policy $\pi_\beta$, whose action probabilities differ from the policy $\pi_k$ being optimized, the expected reward cannot be accurately estimated without adjustment. Importance sampling addresses this by weighting observed actions according to how likely the trained policy $\pi_k$ would select them, thereby producing a more accurate estimate of the expected reward under the target policy $\pi_k$.
 
-Although importance sampling is powerful, it struggles with deterministic policies and continuous action spaces. As an alternative, one can use the collected data to learn a model that approximates the expected reward function $\hat{\mathcal{R}}$, and use this in place of the true expected reward function $\mathcal{R}$ for policy optimization. Under the exploration policy $\pi_\beta$, the agent observes tuples of the form $(x_b, a_b, r_b)$ where $x_b$ is the context, $a_b\sim\pi_\beta(\cdot|x_b)$ is the action taken, and $r_b$ is the observed reward. These interactions can be used to generate a dataset $\mathcal{D}=\{(x_b,a_b,r_b)\}_{b \in \mathcal{D}}$. Modeling the approximate reward function then becomes a Supervised Learning problem.
+Although importance sampling is powerful, it struggles with deterministic policies and continuous action spaces. As an alternative, one can use the collected data to learn a model that approximates the expected reward function $\hat{\mathcal{R}}$, and use this in place of the true expected reward function $\mathcal{R}$ for policy optimization. Under the exploration policy $\pi_\beta$, the agent observes tuples of the form $(x_b, a_b, r_b)$ where $x_b$ is the context, $a_b\sim\pi_\beta(\cdot|x_b)$ is the action taken, and $r_b$ is the observed reward. These interactions can be used to generate a dataset $\mathcal{D}=\{(x_b,a_b,r_b)\}_{b \in \mathcal{D}}$. Modeling the approximate reward function then becomes a supervised learning problem.
 
-In Supervised Learning \parencite{SL}, the goal is to obtain a model that predicts the true labels of all input-output pairs in a dataset. To measure the discrepancy between the true labels $y$ corresponding to input $x$ and predicted labels $\hat y$ from the approximate model $\hat{f}(x)$, a loss function $\mathcal{L}\big(y,\hat{f}(x)\big)$ is introduced \parencite{LossSurvey}. The empirical risk $\mathscr{L}(\mathcal{D},\hat{f})$ or the average loss of the model over an entire dataset is then defined as 
+In supervised learning \parencite{SL}, the goal is to obtain a model that predicts the true labels of all input-output pairs in a dataset. To measure the discrepancy between the true labels $y$ corresponding to input $x$ and predicted labels $\hat y$ from the approximate model $\hat{f}(x)$, a loss function $\mathcal{L}\big(y,\hat{f}(x)\big)$ is introduced \parencite{LossSurvey}. The empirical risk $\mathscr{L}(\mathcal{D},\hat{f})$ or the average loss of the model over an entire dataset is then defined as 
 \begin{equation}
 \mathscr{L}(\mathcal{D},\hat{f})=
 \frac{1}{\|\mathcal{D}\|} \sum_{b \in \mathcal{D}}
@@ -112,7 +109,7 @@ In practice, it is very common to represent the model using a neural network. Fo
 \end{equation}
 where $\lambda$ is the learning rate.
 
-In the setting of learning a model to approximate the expected reward function, the goal is to predict the true expected reward for each context-action pair. This means the reward model is trained by minimizing the loss between the true observed rewards and predicted expected rewards: $\mathcal{L}\big(r_b,\hat{\mathcal{R}}_\theta(x_b,a_b)\big)$. Because rewards are obtained directly from interactions with the environment, no manual annotation is required. In this case, reward modeling can be viewed as a form of Self-Supervised Learning \parencite{SelfSL}, an effective branch of Supervised Learning that avoids the cost of labeling large datasets. For a self-annotated dataset $\mathcal{D}$, the optimal parameters $\theta$ of the approximate expected reward function $\hat{\mathcal{R}}$ are obtained by iteratively minimizing the empirical risk over a sampled mini-batch $B$:
+In the setting of learning a model to approximate the expected reward function, the goal is to predict the true expected reward for each context-action pair. This means the reward model is trained by minimizing the loss between the true observed rewards and predicted expected rewards: $\mathcal{L}\big(r_b,\hat{\mathcal{R}}_\theta(x_b,a_b)\big)$. Because rewards are obtained directly from interactions with the environment, no manual annotation is required. In this case, reward modeling can be viewed as a form of self-supervised learning \parencite{SelfSL}, an effective branch of Supervised Learning that avoids the cost of labeling large datasets. For a self-annotated dataset $\mathcal{D}$, the optimal parameters $\theta$ of the approximate expected reward function $\hat{\mathcal{R}}$ are obtained by iteratively minimizing the empirical risk over a sampled mini-batch $B$:
 \begin{equation}
 \theta^\star = 
 \arg\min_\theta
@@ -122,7 +119,7 @@ In the setting of learning a model to approximate the expected reward function, 
 \end{equation}
 Once trained, this model can be used for policy optimization, enabling sample-efficient learning without access to the true expected reward function.
 
-When applying Supervised Learning, it is important to choose a loss function that is appropriate for the given problem. In the context of learning an approximate expected reward function $\hat{\mathcal{R}}$, the model is trying to capture the true underlying stochastic reward function $R$, which returns a probability distribution over discrete reward outcomes. Because of this, Cross-Entropy (CE) loss \parencite{BCELoss} is suitable, as it is widely used for probability models and classification tasks. The most general form of CE loss is Categorical Cross-Entropy loss $\mathcal{L}_{CCE}$, which is defined as
+When applying supervised learning, it is important to choose a loss function that is appropriate for the given problem. In the context of learning an approximate expected reward function $\hat{\mathcal{R}}$, the model is trying to capture the true underlying stochastic reward function $R$, which returns a probability distribution over reward outcomes. Because of this, cross-entropy (CE) loss \parencite{BCELoss} is suitable, as it is widely used for probability models and classification tasks. The most general form of CE loss is categorical cross-entropy loss $\mathcal{L}_{CCE}$, which is defined as
 \begin{equation}
 \mathcal{L}_{CCE}(\theta) =
 -\sum_{c \in C}
@@ -136,7 +133,7 @@ y_{b,c}\cdot \log(\hat y_{b,c}).
 \end{equation}
 Minimizing this objective encourages the reward model to assign high probability to observed rewards and low probability to others, effectively learning a distribution over rewards.
 
-In many practical settings, the reward is binary, taking one of two labels (success or failure). In this case, Binary Cross-Entropy (BCE) loss is appropriate. The per-sample BCE loss $\mathcal{L}_{BCE}$ is
+In many practical settings, the reward is binary, taking one of two labels (success or failure). In this case, binary cross-entropy (BCE) loss is appropriate. The per-sample BCE loss $\mathcal{L}_{BCE}$ is
 \begin{equation}
 \mathcal{L}_{BCE}(\theta) =
 -y\cdot \log(\hat y) + 
@@ -170,108 +167,5 @@ J(\phi) =
 where the regularization term $\mathscr{R}(\cdot)$ can depend on any relevant variables, including the context $x$, action $a$, or even the policy $\pi_\phi$ itself. 
 
 The regularization function $\mathscr{R}(\cdot)$ is highly versatile and can be applied in multiple ways. For instance, adding a positive entropy term to the objective promotes stochasticity and encourages exploration in the policy, which is exemplified in \parencite{SAC}. Alternatively, regularization can be used to constrain the learned policy to remain close to the dataset distribution. An example from \parencite{f-Divergence} is the use of a negative $f$-divergence term, which penalizes deviations from the dataset and ensures the policy remains supported by the data. Overall, regularization is a powerful tool that can induce desirable behaviors and compensate for the limitations of Offline RL, all while maintaining computational and sample efficiency.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-    % \chapter{Footnotes and Sidenotes}
-
-    % Dissertations will most likely include numerous side comments that are tangential to the main text. Generally, these are included in the document as footnotes or endnotes. With this template, you have the option to include them as \textit{sidenotes}, meaning they appear in the margin of your page rather than at the bottom.\footnote{Prior to 2020, this layout had not been used in a UGA dissertation. However, because of this {\LaTeX} template, the Graduate School and the format checkers approved the use of sidenotes specifically for us!} In this ``chapter'', we'll\footnote{I'll mention that this chapter was written primarily by Joey Stanley, so you'll know who's talking when I express my typographical opinions.} weigh the benefits and drawbacks of sidenotes and show you how you can toggle between them in your document.
-
-    % \section{Turning sidenotes on}
-
-    % The way to turn sidenotes on in this template is pretty straightforward. In the \texttt{dissertation.tex} file, you should find a command called \verb+sidenotetrue+. All you need to do is delete that line of code and type \verb+sidenotefalse+.
-
-    % \section{List of changes}
-
-    % If you do choose to turn the sidenotes on, be aware that it makes a couple other changes to your document. This section lists those changes.
-
-    % \subsection{Changes to the footnote command}
-
-    % The biggest change to your code is that the \verb+\footnote+ command has been recoded to now produce sidenotes. Specifically, the code that accomplishes this rewriting:
-    % \begin{verbatim}
-    %   \renewcommand{\footnote}[1]{
-    %       \sidenote{\RaggedRight\footnotesize #1}
-    %   }
-    % \end{verbatim}
-    % This code essentially turns the \verb+\footnote+ function into a wrapper around the \verb+\sidenote+ function from the \texttt{sidenote} package. It also changes the default fully-justified behavior to ``ragged right.''\footnote{With a sidenote margin so small, it's basically impossible to have good-looking text if it's forced to align to the left and right margins. Using \texttt{RaggedRight} from the \texttt{ragged2e} package does a nice job at making a narrow column of text look nice.} Finally, it ensures the font size is footnote size.
-
-    % The reason for redefining \verb+\footnote+ rather than using \verb+\sidenote+ is becaue I wanted to make toggling between them as simple as possible. If you're three chapters into your dissertation and you decide you want to switch to the other layout, all you need to do is change one line of code. Had I required you to use \verb+\sidenote+, you would have to change the one command \textit{and} change all the \verb+\footnote+ commands to \verb+\sidenote+. I think doing it this way makes sense.
-
-    % \subsection{Changes to the page layout}
-
-    % If you have footnotes, the margins of your paper will be 1 inch on all sides, except for the bottom which is 1.25 inches.\footnote{This extra space is typo\-grahpically recommended to give the page a more balanced appearance.}. The body of the text is therefore centered, and there is no difference between even- and odd-sided pages.
-
-    % If you turn on the sidenotes though, we needed to make some extra room to accomodate them in the margin.\footnote{Ideally, we'd make the paper wider so that it's slightly more square. Most books that use sidenotes today are like that. It gives a little extra width to the margins so the sidenotes aren't so narrow. Alas, we are constrained by UGA and Print \& Copy in Tate since they can only bind specific paper sizes.} To accomplish this, we had to reformat the layout on the page.
-
-    % The biggest change is that the body of the text is now off-center. For odd-sided pages (meaning it would appear on the right side when you lay the book open), it's shifted towards the left and for even-sided pages (the left side of a two-page spread), it's shifted towards the right. In other words, the text is shifted towards the spine of the book. This leaves some room for the margins, which are towards the edges of the book. Here are the default dimensions:
-
-    % \begin{itemize}
-    %   \item The top margin is 1 inch and the bottom margin is 1.25 inches.
-    %   \item Starting from the edge of the page (on an odd-sided page), the outer margin is 0.75 inches. This is the distance from the page to the edge of your sidenotes.
-    %   \item The sidenotes themselves are 1.5 inches wide.
-    %   \item There is a one-eighth inch space between the sidenotes and the body text.
-    %   \item The body text itself is 4.375 inches wide.
-    %   \item The inner margin is 1 inch.
-    %   \item There is an additional ``binding offset'' of a quarter inch added to the inside margin to accomodate for printing. This basically just means that the inside margin is 1.25 inches.
-    % \end{itemize}
-    % The outer margin has to be a little bit narrower than the typical 1 inch to give the body text enough room. Because footnotes are left-justified, this is not as noticeable on odd-sided pages, though on even-sided pages it's a little more obvious.
-
-
-
-    % \section{Details about how sidenote behavior}
-
-    % You should be aware of how the sidenotes behave, as they are implemented in this document. Sidenotes will be placed on the outer marin, but its their vertical positioning that may shift around.
-
-    % By default, sidenotes will start on the same line as the sidenote \textit{marker} (that is, the small superscripted number within the body of your text). If you use relatively few sidenotes, or if they're generally short, this is what you'll typicaly find.
-
-    % The question then is what happens if a sidenote runs up against the bottom of the page. Like if the sidenote marker is on the bottom line of a page and the sidenote itself is several lines long. As expected, the position of the sidenote itself will simply shift up so that it doens't spill into the bottom margin. Under the hood, while it is important that a sidenote be near its marker, is is \textit{more} important for the sidenote to not spill into the bottom margin, so that takes priority.
-
-    % Similarly, if you have multiple sidenotes that are near each other, the notes themselves will not overlap. They'll reposition themselves vertically along the margin so that they're as close to their markers as possible without overlapping with eaach other or with a top/bottom margin.
-
-    % For very long sidenotes,\footnote{Here is a very long sidenote so you can get a feel for what it looks like. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.} or for pages with many sidenotes such that they fill the margin completely, {\LaTeX} will do what it can to put it on the same page as the marker, but if it cannot, it will push it to the next page. For long footnotes, you may have seen them start on the correct page but spill over onto the next page---that behavior is unfortunately not possible with the current implementation of sidenotes in this template. For the most part this behavior is fine and readers typically are aware enough to look on the next page. However, be aware that should this next page be, say, the start of a new chapter, you'll get some unexpected sidenote placements.
-
-    % For sidenotes that are so long that they cannot fit on a single page, it will cause an error in {\LaTeX} and your document will not compile. If you typically have many very long sidenotes, it may be better to switch to a footnote layout.
-
-
-
-    % \section{Pros and Cons}
-
-    % With this information in mind, it's important to consider the pros and cons of using sidenotes.
-
-    % \subsection{Why I love sidenotes}
-
-    % There are lots of reasons why I love sidenotes. First off, since they were popularized by statisticiaon Edward Tufte\footnote{Note that there is a \texttt{tufte} package that creates sidenotes. Because we did not necessarily want to use the other changes that package makes to the document, we chose not to use it here.} in his books on data visualization, they've been used widely and are adopted by many typographers. The reason is simple: they just look nice. Rather than your eye having to dart to the bottom of the page and back, sidenotes are \textit{in situ}, and they do a nice job at making it easier for the reader to find them.
-
-    % In addition to making the sidenotes themselves easier to find and read, increasing the margin on one side makes the body text a little narrower. The typical 6.5 inch body text with 10- or 12-point font is a little too wide. The narrower layout, together with an appropriate line spacing, makes for a sophisticated layout that's easier to read than what you might be used to in a dissertation.
-
-    % Sidenotes are nice for putting some kinds of additional, non-textual information that are very vertical. It's possible to put a very narrow table, a very narrow image, or even a smaller image,\footnote{There's no need for an image to take up half a page when the information can be conveyed in tiny plot. Here's an actual image I included in my dissertation, showing the distribution of a particular variable. \includegraphics[width = 1.5in]{figures/tiny.pdf} It was handy to be able to have several of these little guys scattered around in the margins rather than taking up a huge chunk of the page.} icon, or plot in a sidenote.
-
-
-    % \subsection{Why you may not love sidenotes}
-
-    % First, as just mentioned, they're not ideal if you often use many long footnotes. If that's the case, you would probably be better off with the footnotes option.
-
-    % Another small issue relates to how this particular template is structured. You can work on each chapter and compile each chapter individually. However, because the command that reorganizes the layout on the page is on the \texttt{dissertation.tex} file, when you compile just a single chapter, you don't get the right layout. This can be kind of annoying.
-
-    % For certain things that may go in footnotes but are inherently wider, like formulas, computer code, extended quotations, data, numbered examples, or images, sidenotes are just too narrow. You're better off switching to footnotes if you make use of many of these. You may find a way to hack a one-off footnote if you need it for just one case.
-
-    % Finally, because I've redefined \verb+\footnote+ to do sidenotes, it's not possible to include both footnotes and sidenotes within your document. I have seen some books do this, but I'm not sure why you would need both. Fortunately, this is an easy fix: you would just remove the code in \texttt{dissertation.tex} that redefines footnotes, and now you're free to use \verb+\footnote+ and \verb+\sidenote+ independently of each other. This behavior has not been tested so you're on your own as far as debugging goes.
-
-
-
-    % \section{Hacking some less common cases}
-
-    % \subsection{Putting a plot in a sidenote}
-
-    % The code for the little plot I have in the sidenote above is this:
-    % \begin{verbatim}
-    %   \includegraphics[width = 1.5in]{figures/tiny.pdf}
-    % \end{verbatim}
-    % Note that because these are so small, there is no figure number assigned to them and there's no caption. Consequently, they will not appear in the ``List of Figures'' in your frontmatter if you have one.
-
-    % \subsection{Others?}
-
-    % TODO.
 
 \end{document}

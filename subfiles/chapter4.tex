@@ -2,23 +2,23 @@
 \begin{document}
 
 \chapter{Methodology}
-This chapter presents the proposed approach for learning a policy using an approximate expected reward function. Section \ref{Approximating an Accurate Reward Model} describes how the reward model is learned, emphasizing strategies to improve accuracy and reliability of the expected reward function approximation. Section \ref{Policy Optimization} then introduces an enhanced policy optimization framework, detailing ways to improve performance of the learned policies. These components form an effective approach for leveraging limited reward signals efficiently while maintaining stability and performance in uncertain and costly environments.
+This chapter presents the proposed approach for learning a policy using an approximate expected reward function. Section \ref{Approximating an Accurate Reward Model} describes how the reward model is learned, emphasizing strategies to improve accuracy and reliability of the expected reward function approximation. Section \ref{Policy Optimization} then introduces an enhanced policy optimization framework, detailing ways to improve performance of the learned policy. These components form an effective approach for leveraging limited reward signals efficiently while maintaining stability and performance in uncertain and costly environments.
 
 \section{Approximating and Accurate Reward Model}
 \label{Approximating an Accurate Reward Model}
-If the true expected reward function $\mathcal{R}$ for a Contextual Bandit is unknown, a learned approximation of the expected reward function $\hat{\mathcal{R}}$ can be used in its place to directly apply policy gradient methods. As detailed in Section \ref{RFM}, learning a reward model consists of utilizing a dataset $\mathcal{D}$ defined as $\mathcal{D}=\{(x_b,a_b,r_b)\}_{b \in \mathcal{D}}$. The reward serves as the output label, and self-supervised learning is performed on the context-action inputs to predict the corresponding expected reward. 
+If the true expected reward function $\mathcal{R}$ for a contextual bandit is unknown, a learned approximation of the expected reward function $\hat{\mathcal{R}}$ can be used in its place to directly apply policy gradient methods. As detailed in Section \ref{RFM}, learning a reward model consists of utilizing a dataset $\mathcal{D}$ defined as $\mathcal{D}=\{(x_b,a_b,r_b)\}_{b \in \mathcal{D}}$. The reward serves as the output label, and self-supervised learning is performed on the context-action inputs to predict the corresponding expected reward. 
 
 Although this basic process can produce effective results, additional strategies are employed to further improve the accuracy and robustness of the approximate reward model. First, an effective data collection strategy is used to construct a dataset with broad coverage of the context-action space and a diverse range of reward values to guide model learning. Second, the approximate expected reward function is modeled with an ensemble of networks, leading to improved predictive performance and introducing a mechanism to quantify and penalize uncertainty. Together, these components enable the learned expected reward function to produce more accurate and reliable reward estimates for context-action pairs. This accuracy is crucial, as the approximate expected reward model is subsequently used to guide and optimize the policy.
 
 \subsection{Initial Data Collection Strategy}
 To produce an accurate model with supervised learning, it is typically crucial to train with large and representative datasets, as it enables the model to capture the relationship between inputs and outputs across a wide range of scenarios. However, in many real world domains, producing large-scale datasets is often time-consuming and expensive, especially when manual annotation is required. Because of this, when working with limited data, it is essential to maximize the diversity of the training dataset \parencite{Diversity}. This diversity improves coverage of the input space and allows the model to generalize effectively without access to huge quantities of data.
 
-Reinforcement learning is commonly applied to robotics despite the high cost of data collection, as it provides a natural framework for learning from interaction. In practice, many of these systems allow for human intervention through teleoperation or external control, which can be used to produce expert demonstrations that yield high reward behaviors. This gives rise to learning methods like Imitation Learning \parencite{IL}, or more specifically Kinesthetic Teaching \parencite{KT}, where policies are trained to replicate the demonstrated actions. While these methods can produce effective policies, their goal is to mimic the demonstrated behavior rather than to infer and optimize an underlying reward function, As a result, they are limited to the expert data distribution and may fail to generalize or improve upon it.
+Reinforcement learning is commonly applied to robotics despite the high cost of data collection, as it provides a natural framework for learning from interaction. In practice, many of these systems allow for human intervention through teleoperation or external control, which can be used to produce expert demonstrations that yield high reward behaviors. This gives rise to learning methods like imitation learning \parencite{IL}, or more specifically kinesthetic teaching \parencite{KT}, where policies are trained to replicate the demonstrated actions. While these methods can produce effective policies, their goal is to mimic the demonstrated behavior rather than to infer and optimize an underlying reward function, As a result, they are limited to the expert data distribution and may fail to generalize or improve upon it.
 
-Nevertheless, human-generated data provides a valuable source of information that can be leveraged beyond pure imitation. To construct a dataset that is sufficiently diverse, the proposed approach forms an initial dataset $\mathcal{D}_0$ by combining data generated by a human expert policy $\pi_{\text{E}}$ and a random exploration policy $\pi_{\beta}$. The term "expert" is used loosely here; while these actions should produce high rewards, they do not need to be strictly optimal. These samples provide a positive learning signal to identify desirable regions of the reward space for policy optimization. In contrast, the exploration policy $\pi_\beta$ is likely to produce lower-reward actions, but its primary purpose is to ensure broad coverage of the context and action space. This exploratory data exposes the model to a wider range of outcomes, including failure cases, which improves overall data diversity. By combining expert and exploratory data, the resulting dataset achieves both reward diversity and context-action coverage. This balance is important for learning an approximate expected reward function that can be reliably used for downstream policy optimization.
+Nevertheless, human-generated data provides a valuable source of information that can be leveraged beyond pure imitation. To construct a dataset that is sufficiently diverse, the proposed approach forms an initial dataset $\mathcal{D}_0$ by combining data generated by a human expert policy $\pi_{\text{E}}$ and a random exploration policy $\pi_{\beta}$. The term ``expert'' is used loosely here; while these actions should produce high rewards, they do not need to be strictly optimal. These samples provide a positive learning signal to identify desirable regions of the reward space for policy optimization. In contrast, the exploration policy $\pi_\beta$ is likely to produce lower-reward actions, but its primary purpose is to ensure broad coverage of the context and action space. This exploratory data exposes the model to a wider range of outcomes, including failure cases, which improves overall data diversity. By combining expert and exploratory data, the resulting dataset achieves both reward diversity and context-action coverage. This balance is important for learning an approximate expected reward function that can be reliably used for downstream policy optimization.
 
 \subsection{Leveraging Ensemble Networks}
-When a dataset lacks sufficient diversity to adequately cover the input space, a learned model cannot be trusted in under-represented regions. While a narrowly distributed dataset will yield strong performance on in-distribution samples, this becomes problematic when the model is utilized for out-of-distribution samples. Specifically, if a model for the expected reward function is learned and used to guide policy learning, the policy may explore these poorly represented regions, resulting in unreliable reward estimates and degraded performance.
+When a dataset lacks sufficient diversity to adequately cover the input space, a learned model cannot be trusted in under-represented regions. While a narrowly distributed dataset will yield strong performance on in-distribution samples, this becomes problematic when the model is utilized for out-of-distribution samples. Specifically, if a model for the expected reward function is learned and used to guide policy optimization, the policy may explore these poorly represented regions, resulting in unreliable reward estimates and degraded performance.
 
 A common strategy in supervised learning to mitigate this issue is to train an ensemble of models rather than relying on a single predictor. One simple approach is to average predictions across the ensemble, which often yields smoother and more accurate estimates. More importantly, disagreement between the models can be used as a measure of uncertainty. Some methods utilize the model with worst-case prediction to incorporate this uncertainty, while others compute the variance across models to penalize estimates. Either way, ensemble methods can significantly improve robustness in the learned model. 
 
@@ -79,7 +79,7 @@ where $\beta$ is the uncertainty coefficient, a hyperparameter that controls the
 
 \section {Improved Policy Optimization}
 \label{Policy Optimization}
-After learning an approximate expected reward function, the next step is to perform policy optimization. This is typically achieved by iteratively updating a parameterized policy in the direction of the policy gradient (See Section \ref{PGRL}). While standard policy gradient methods have demonstrated strong performance, they often rely on the assumption that the reward signal is accurate and that maximizing expected reward is sufficient to produce effective behavior.
+After learning an approximate expected reward function, the next step is to learn a policy, which is achieved by policy gradient optimization (See Section \ref{PGRL}). While standard policy gradient methods have demonstrated strong performance, they often rely on the assumption that the reward signal is accurate and that maximizing expected reward is sufficient to produce effective behavior.
 
 Because the reward model is approximated, additional techniques are introduced to improve the reliability and robustness of the optimization process. First, a robustness-aware objective is proposed, which encourages the policy to select high reward and perturbation-resilient actions. Second, an iterative learning procedure is adopted, in which a policy trained offline is repeatedly deployed to collect new data, enabling continuous refinement of the reward model and policy. Collectively, these strategies lead to a more stable and reliable optimization process, resulting in improved policy performance. This is particularly important when relying on an approximate expected reward function trained from limited or imperfect data.
 
@@ -88,49 +88,31 @@ In reinforcement learning, the main objective is to maximize expected reward, as
 
 To address these limitations, various techniques can be applied. One common approach is regularization (See Section \ref{Reg}), where an additional term is incorporated into the RL objective to arouse certain behaviors in the policy being optimized. For example, regularization can promote improved exploration or bias the policy toward regions supported by reliable data. Regardless of the desired traits, the resulting agent is often more successful than one trained with the standard learning objective alone.
 
-Another line of work focuses on explicitly handling uncertainty through Robust RL, which is explained in Section \ref{RRL}. These methods aim to account for uncertainty in different components of the RL problem, including the reward function and action execution. For instance, policies may be optimized with respect to the worst-case reward function or under adversarial perturbations to the actions. While such approaches produce robust agents, they can also lead to overly conservative policies due to their emphasis on the worst-case outcomes.
+Another line of work focuses on explicitly handling uncertainty through robust RL, which is explained in Section \ref{RRL}. These methods aim to account for uncertainty in different components of the RL problem, including the reward function and action execution. For instance, policies may be optimized with respect to the worst-case reward function or under adversarial perturbations to the actions. While such approaches produce robust agents, they can also lead to overly conservative policies due to their emphasis on the worst-case outcomes.
 
 % Both of these techniques were considered when looking to handle the weaknesses of the approach in this paper. Firstly, the method implements an approximate expected reward function for policy optimization. Even with the approaches from the previous section, the reward model may not be completely accurate, which means there is the potential for the policy to exploit these innacuracies, selecting actions that are highly rated by the approximate expected reward function but are actually suboptimal in the real-world. Secondly, the method incorporates offline training with data collected from an expert and random exploration policy. Although the goal is to provide diverse data, it may not be sufficient, leading to a policy that converges to a local optima due to limited exploration and the absence of online feedback. 
 
-Both of these techniques were considered when addressing uncertainty in both the environment and the approximate expected reward function. To mitigate these issues, a new learning objective is introduced to promote robustness to action perturbations. First, a robustness measure, called the \textbf{Perturbed Action Robustness (PAR)} function, is defined as
-% \begin{equation}
-% \label{PAR Function 1}
-% \eta(x,a) \overset{\Delta}{=}
-% \frac {\int_{-\delta_{l}}^{\delta_{l}}
-% \hat{\mathcal{R}}(x,a+\delta) \ d\delta}
-% {\int_{-\delta_{l}}^{\delta_{l}}
-% r_\text{{max}} \ d\delta}
-% = \frac {\int_{-\delta_{l}}^{\delta_{l}}
-% \hat{\mathcal{R}}(x,a+\delta) \ d\delta}
-% {2 \delta_l \cdot r_\text{{max}}},
-% \end{equation}
-% where $\delta_l$ is the bounds of the local action perturbations, and $r_\text{{max}}$ is the maximum possible reward. To better understand the PAR function, it is important to note that the denominator in the equation above is for normalization. This way, the PAR function returns the following: $\eta: \mathcal{X} \times \mathcal{A} \to [0,1]$. Because of this, it is better to write the PAR function with the following:
-% \begin{equation}
-% \label{PAR Proprtion}
-% \eta(x,a) \propto 
-% \int_{-\delta_{l}}^{\delta_{l}}
-% \hat{\mathcal{R}}(x,a+\delta) \ d\delta.
-% \end{equation}
+Both of these techniques were considered when addressing uncertainty in both the environment and the approximate expected reward function. To mitigate these issues, a new learning objective is introduced to promote robustness to action perturbations. First, a robustness measure, called the Perturbed Action Robustness (PAR) function, is defined as
 \begin{equation}
 \label{PAR Function 2}
 \eta(x,a) \overset{\Delta}{=}
-\frac{1}{Z} \cdot \int_{-\delta_{l}}^{\delta_{l}}
+\frac{1}{Z} \cdot \int_{-\delta_\text{max}}^{\delta_\text{max}}
 \hat{\mathcal{R}}(x,a+\delta) \ d\delta,
 \end{equation}
-where $\delta_l$ is the bounds of the action perturbations and $Z$ is a normalizing constant. The normalizer is commonly defined as 
+where $\delta_\text{max}$ is the largest possible action perturbation that can be observed in the environment and $Z$ is a normalizing constant. The normalizer is commonly defined as 
 \begin{equation}
 \label{PAR Normalizer}
 Z \overset{\Delta}{=}
-\int_{-\delta_{l}}^{\delta_{l}}
-r_\text{{max}} \ d\delta,
-% = 2 \delta_l \cdot r_\text{{max}},
+\int_{-\delta_\text{max}}^{\delta_\text{max}}
+\ d\delta =
+2\cdot \delta_\text{max}.
 \end{equation}
-where $r_\text{{max}}$ is the maximum possible reward. By normalizing $\eta$ with $\frac{1}{Z}$, the output remains within the bounds $[0,1]$. Without normalization, the PAR function corresponds to the cumulative expected reward of an action as it is perturbed to the bounds, providing a measure of the action's local robustness. Intuitively, it measures the effectiveness of nearby actions, assigning larger values to actions that lie in high reward regions. This robustness function is incorporated into the standard objective to obtain
+By normalizing $\eta$ with $\frac{1}{Z}$, the output is set to the same scale as the expected reward function and it becomes the average reward in the integration region. Intuitively, it measures the effectiveness of nearby actions, assigning larger values to actions that lie in high reward regions. This robustness function is incorporated into the standard objective to obtain the PAR objective
 \begin{equation}
 \label{New Objective}
 J(\phi) =
 \mathbb{E}_{x \sim \rho_x(\cdot)}
-\Big[\hat{\mathcal{R}}\big(x,\pi_\phi(x)\big) + \alpha \cdot\eta\big(x, \pi_\phi(x)\big)\Big],
+\Big[\big(1-\alpha\big) \cdot \hat{\mathcal{R}}\big(x,\pi_\phi(x)\big) + \alpha \cdot\eta\big(x, \pi_\phi(x)\big)\Big],
 \end{equation}
 where $\alpha$ is the robustness coefficient, a parameter that determines the importance of the PAR function. This objective encourages the policy $\pi_\phi$ to select actions that not only achieve high expected reward, but those that are also stable under action perturbations. As a result, the learned policy $\pi_\phi$ is less likely to exploit narrow peaks in the reward landscape and is more likely to converge to broad, high reward regions. The standard RL objective is recovered in the limit as $\alpha \to 0$. 
 
@@ -139,32 +121,32 @@ The corresponding policy gradient is
 \label{New Policy Gradient}
 \nabla_\phi J(\phi) =
 \mathbb{E}_{x \sim \rho_x(\cdot)}
-\big[\nabla_\phi \pi_\phi(x) \cdot 
-\nabla_a \big(\hat{\mathcal{R}}(x,a) + \alpha \cdot \eta(x,a)\big) |_{a=\pi_\phi(x)} \big].
+\Big[\nabla_\phi \pi_\phi(x) \cdot 
+\nabla_a \Big(\big(1-\alpha\big) \cdot \hat{\mathcal{R}}(x,a) + \alpha \cdot \eta(x,a)\Big) \Big|_{a=\pi_\phi(x)} \Big].
 \end{equation}
 Much like the standard deterministic policy gradient shown in Equation \ref{GJ}, it is often intractable to calculate this expectation exactly. However, it can be estimated with Monte Carlo sampling, exemplified by the following
 \begin{equation}
 \label{Aproximate New Policy Gradient}
 \nabla_\phi J(\phi) \approx
 \frac{1}{\|B\|} \sum_{b=1}^{B}\nabla_\phi \pi_\phi(x_b) 
-\cdot \nabla_a\big(\hat{\mathcal{R}}(x_b,a_b) + \alpha \cdot \eta(x_i,a_i)\big) |_{a_i=\pi_\phi(x_i)},
+\cdot \nabla_a\Big((1-\alpha) \cdot \hat{\mathcal{R}}(x_b,a_b) + \alpha \cdot \eta(x_b,a_b)\Big) \Big|_{a_b=\pi_\phi(x_b)},
 \end{equation}
 where $B$ represents the sampled batch of contexts. This approximation provides an effective learning signal to guide policy optimization under the proposed objective.
 
 \subsection{Iterative Deployment of Trained Policy}
-One of the major problems with Offline RL (Section \ref{OFF RL}) is its inability to improve its policy through interactions with the environment. Because learning is constrained to a fixed dataset, the learned policy is strongly dependent on the data collected by the exploration policy. When this data is incomplete or does not provide sufficient coverage of the context and action spaces, optimization may lead the policy to regions that appear optimal under the data distribution, but when deployed in the true environment, the policy underperforms.
+One of the major problems with offline RL (Section \ref{OFF RL}) is its inability to improve its policy through interactions with the environment. Because learning is constrained to a fixed dataset, the learned policy is strongly dependent on the data collected by the exploration policy. When this data is incomplete or does not provide sufficient coverage of the context and action spaces, optimization may lead the policy to regions that appear optimal under the data distribution, but when deployed in the true environment, the policy underperforms.
 
-Similarly, a major problem with Model-Based RL, which is detailed in Section \ref{MBRL Paragraph}, is the accuracy of the learned dynamics or reward model. Because these models are trained on previously collected experience, they inherit the same limitations as policies learned using Offline RL. In regions where data is sparse or absent, model predictions become unreliable. This is particularly problematic when policy updates shift the agent towards these out-of-distribution states, where the reward estimates are likely inaccurate.
+Similarly, a major problem with model-based RL, which is detailed in Section \ref{MBRL Paragraph}, is the accuracy of the learned dynamics or reward model. Because these models are trained on previously collected experience, they inherit the same limitations as policies learned using offline RL. In regions where data is sparse or absent, model predictions become unreliable. This is particularly problematic when policy updates shift the agent towards these out-of-distribution states, where the reward estimates are likely inaccurate.
 
-To tackle these coupled issues, the proposed method combines offline training with iterative online deployment for policy evaluation and model refinement. After optimization under the modified objective described above, the resulting policy $\pi_{\phi_i}$ is executed in the environment to generate a new dataset $\mathcal{D}_{\pi_{\phi_i}}$. To improve exploration and to evaluate robustness, Gaussian noise is added to the continuous actions of the deterministic policy $\pi_{\phi_i}$ during deployment. The collected context-action-reward tuples are then aggregated with the existing dataset as follows:
+To tackle these coupled issues, the proposed method combines offline training with iterative online deployment for policy evaluation and model refinement. After optimization under the modified objective (Equation \ref{New Objective}), the resulting policy $\pi_{\phi_i}$ is executed in the environment to generate a new dataset $\mathcal{D}_{\pi_{\phi_i}}$. To improve exploration and to evaluate robustness, Gaussian noise is added to the continuous actions of the deterministic policy $\pi_{\phi_i}$ during deployment. The collected context-action-reward tuples are then aggregated with the existing dataset as follows:
 \begin{equation}
 \mathcal{D}_{i+1} = \mathcal{D}_i \ \cup \ \mathcal{D}_{\pi_{\phi_i}},
 \end{equation}
 resulting in a progressively expanding dataset that combines random exploration, expert data, and newly collected on-policy experience. 
 
-This aggregated dataset is subsequently used to retrain the expected reward model, allowing it to adapt to regions of the context-action space induced by the current policy. As a result, the expected reward approximator becomes progressively more accurate in high relevance regions. The improved expected reward model is then used re-optimize the policy, either reinforcing the current actions or steering the policy away from them. This iterative refinement helps mitigate errors arising from both the policy and the learned model, resulting in agent that is both sample and computational efficient while remaining effective. The overall procedure is presented in Figure \ref{Overall Algorithm} and summarized in Algorithm \ref{Main Alg}.
+This aggregated dataset is subsequently used to retrain the expected reward model, allowing it to adapt to regions of the context-action space induced by the current policy. As a result, the expected reward approximator becomes progressively more accurate in high relevance regions. The improved expected reward model is then used to re-optimize the policy, either reinforcing the current actions or steering the policy away from them. This iterative refinement helps mitigate errors arising from both the policy and the learned model, resulting in agent that is both sample and computational efficient while remaining effective. The overall procedure is presented in Figure \ref{Overall Algorithm} and summarized in Algorithm \ref{Main Alg}.
 \begin{figure}[h]
-\centering\includegraphics[width=0.75\textwidth]{figures/My RL.png}
+\centering\includegraphics[width=0.75\textwidth]{figures/RL/My RL.png}
 \caption[Iterative Reward Model and Policy Training.]{Iterative Reward Model and Policy Training. An exploration policy $\pi_\beta$ and expert policy $\pi_E$ interact with the environment to collect context-action-reward tuples, which are stored in the initial dataset $\mathcal{D}$. This dataset is used to train an approximate expected reward model $\hat{\mathcal{R}}_i$, which guides the optimization of a policy $\pi_i$. The learned policy $\pi_i$ is deployed in the environment to generate on-policy data and adds it to the dataset $\mathcal{D}$. The reward model $\hat{\mathcal{R}}_{i+1}$ is updated with the augmented dataset, and a new policy $\pi_{i+1}$ is optimized. This process repeats iteratively, progressively improving the reward model and policy.}
 \label{Overall Algorithm}
 \end{figure}
@@ -190,7 +172,7 @@ This aggregated dataset is subsequently used to retrain the expected reward mode
     \For{$t = 1$ to $T$}
         \State Sample mini-batch from current dataset: $B \subset \mathcal{D}_i$
         \State Update parameters with gradient: 
-        \Statex \hspace{\algorithmicindent} \ \ \ \ \ \ \ $\nabla_\phi J(\phi) = \frac{1}{\|B\|} \sum_{b \in B} \nabla_\phi \pi_\phi(x_b) \cdot \nabla_a\big(\hat{\mathcal{R}}_{\theta}(x_b,a_b) + \alpha \cdot \eta(x_b,a_b)\big) |_{a_b=\pi_\phi(x_b)}$
+        \Statex \hspace{\algorithmicindent} \ \ \ \ \ \ \ $\nabla_\phi J(\phi) = \frac{1}{\|B\|} \sum_{b \in B} \nabla_\phi \pi_\phi(x_b) \cdot \nabla_a\big((1-\alpha)\cdot\hat{\mathcal{R}}_{\theta}(x_b,a_b) + \alpha \cdot \eta(x_b,a_b)\big) |_{a_b=\pi_\phi(x_b)}$
     \EndFor
     \State Execute $\pi_{\phi_i}$ and add interactions to $\mathcal{D}_{\pi_{\phi_i}}$
     \State Update dataset: $\mathcal{D}_{i+1}=\mathcal{D}_i \cup \mathcal{D}_{\pi_{\phi_i}}$

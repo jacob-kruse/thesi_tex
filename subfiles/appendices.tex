@@ -1,6 +1,185 @@
 \documentclass[./dissertation.tex]{subfiles}
 \begin{document}
 
-  \chapter{}
+\chapter{Theoretical Justification for Uncertainty Penalization}
+\label{sec:ensemble_theory}
+% To justify the use of the uncertainty-penalized reward defined in Eq.~\ref{Penalized Reward}, we establish that $\hat{\mathcal{R}}_\theta(x, a)$ acts as a probabilistic lower bound on the true expected reward $\mathcal{R}(x, a)$. This ensures that the policy optimization described in Sec.~\ref{Policy Optimization} is conservative in regions of the context-action space where the reward model is unreliable.
+\newtheorem*{repeatedThm}{Theorem \ref{thm:probabilistic_LB_reward_model}}
+\begin{repeatedThm}[Probabilistic Bound of Reward Model]
+Suppose the ensemble networks estimation method has a true mean ${\cal R}(x,a)=\mathbb{E}[\bar{\cal R}_{\theta_i}(x,a)]$ and common variance $\sigma^2=Var(\bar{\cal R}_{\theta_i})$, $\forall i$. Then, the uncertainty-penalized reward model $\hat{\mathcal{R}}_\theta(x, a) = \mu_\theta(x, a) - \beta \sigma_\theta(x, a)$ (Eq.~\ref{Penalized Reward}) satisfies the following with probability $\ge 1 - \delta$ for any $\delta \in (0, 1)$ and $\beta \geq \sqrt{\frac{1}{N\delta}}$
+\[ \hat{\mathcal{R}}_\theta(x, a) \leq \mathcal{R}(x, a) \]
+\end{repeatedThm}
+
+\begin{proof}
+Consider the probability that the estimate $\mu_\theta$ deviates from the true reward $\mathcal{R}$ by more than $\beta \sigma_\theta$:
+\[ \mathbb{P}\left[ \mathcal{R}(x, a) < \mu_\theta(x, a) - \beta \sigma_\theta(x, a) \right] \leq \mathbb{P}\left[ |\mu_\theta(x, a) - \mathcal{R}(x, a)| > \beta \sigma_\theta(x, a) \right] \]
+Applying Chebychev's inequality to the random variable $\mu_\theta$:
+\[ \mathbb{P}\left( |\mu_\theta(x, a) - \mathcal{R}(x, a)| \geq \epsilon \right) \leq \frac{\text{Var}(\mu_\theta)}{\epsilon^2} \]
+Setting $\epsilon = \beta \sigma_\theta(x, a)$ and noting that $\text{Var}(\mu_\theta)=\sigma^2/N$:
+\[ \mathbb{P}\left( |\mu_\theta(x, a) - \mathcal{R}(x, a)| \geq \beta \sigma_\theta(x, a) \right) \leq \frac{\sigma^2 / N}{(\beta \sigma_\theta(x, a))^2} \]
+Under the assumption that the ensemble standard deviation $\sigma_\theta(x, a)$ is an unbiased estimator of the population standard deviation $\sigma$ (i.e., $\mathbb{E}[\sigma_\theta^2] = \sigma^2$), we have:
+\[ \mathbb{P}\left( |\mu_\theta(x, a) - \mathcal{R}(x, a)| \geq \beta \sigma_\theta(x, a) \right) \leq \frac{\sigma^2}{N \beta^2 \sigma^2} = \frac{1}{N \beta^2} \]
+To ensure the probability of the lower bound being violated is at most $\delta$, we set:
+\[ \frac{1}{N \beta^2} \leq \delta \implies \beta^2 \geq \frac{1}{N \delta} \implies \beta \geq \sqrt{\frac{1}{N \delta}} \]
+Thus, with probability at least $1 - \delta$, $\mu_\theta(x, a) - \beta \sigma_\theta(x, a) \leq \mathcal{R}(x, a)$, i.e., $\hat{\cal R}_\theta(x,a) \leq \mathcal{R}(x, a)$.
+\end{proof}
+Thus with a high probability, the uncertainty-penalized reward model does not overestimate the true reward even in underexplored regions.
+
+\chapter{Theoretical Analysis of Convergence}
+\label{sec:convergence}
+
+To analyze the convergence of the robust policy gradient, we first establish the smoothness properties of the Perturbed Action Robustness (PAR) function and the resulting objective function.
+
+\begin{lemma}[Smoothness of PAR Function]
+Assume the approximate reward model $\hat{\mathcal{R}}(x, a)$ (as defined in Sec.~\ref{sec:ensemble_reward}) is twice continuously differentiable w.r.t. action $a$, i.e., $\hat{\mathcal{R}}$ and $\nabla_a\hat{\mathcal{R}}$ are Lipschitz continuous with constants $L_{R_1}$ and $L_{R_2}$ respectively.
+Then the PAR function (defined in Eq.~\ref{PAR Function 2}) is also twice continuously differentiable w.r.t. $a$, i.e., $\eta(x,a)$ and $\nabla_a\eta(x,a)$ are also Lipschitz continuous with constants $L_{R_1}$ and $L_{R_2}$ respectively. In particular, the gradient of $\eta(x, a)$ is bounded.
+\label{lem:PAR_smoothness}
+\end{lemma}
+
+\begin{proof}
+Using the definition of the PAR function (Eq.~\ref{PAR Function 2}) and taking its gradient with respect to $a$:
+\[ \nabla_a \eta(x, a) = \frac{1}{Z} \int_{-\delta_\text{max}}^{\delta_\text{max}} \nabla_a \hat{\mathcal{R}}(x, a + \delta) \, d\delta \]
+Applying the triangle inequality for integrals and the Lipschitz assumption $\|\nabla_a \hat{\mathcal{R}}\| \leq L_{R_1}$:
+\[ \|\nabla_a \eta(x, a)\| \leq \frac{1}{Z} \int_{-\delta_\text{max}}^{\delta_\text{max}} \|\nabla_a \hat{\mathcal{R}}(x, a + \delta)\| \, d\delta \leq \frac{1}{Z} \int_{-\delta_\text{max}}^{\delta_\text{max}} L_{R_1} \, d\delta = \frac{2\delta_\text{max} L_{R_1}}{Z}\]
+Given that $Z = 2\delta_\text{max}$ (from Eq.~\ref{PAR Normalizer}), we have:
+\[ \|\nabla_a \eta(x, a)\| \leq L_{R_1} \]
+This proves that $\eta$ is $L_{R_1}$-Lipschitz and that its gradient is bounded by a constant independent of $a$ and $x$, preventing gradient explosion during optimization.
+
+Now consider the difference between gradients of $\eta$ at $a$ and $a'$:
+\begin{align}
+    \|\nabla_a \eta(x, a') - \nabla_a \eta(x, a)\| &= \left\| \frac{1}{Z} \int_{-\delta_\text{max}}^{\delta_\text{max}} \left( \nabla_a \hat{\mathcal{R}}(x, a'+\delta) - \nabla_a \hat{\mathcal{R}}(x, a+\delta) \right) d\delta \right\| \nonumber \\
+    &\le \frac{1}{Z} \int_{-\delta_\text{max}}^{\delta_\text{max}} \| \nabla_a \hat{\mathcal{R}}(x, a'+\delta) - \nabla_a \hat{\mathcal{R}}(x, a+\delta) \| \ d\delta \nonumber \\
+    &\le L_{R_2} \|a' - a\|\nonumber 
+\end{align}
+Therefore, $\nabla_a \eta$ is also Lipschitz continuous with constant $L_{R_2}$.
+\end{proof}
+
+\begin{lemma}[L-Smoothness of the Robust Objective]
+Assume the policy $\pi_\phi(x)$ is twice continuously differentiable, i.e., $\pi_\phi(x)$ and its gradient $\nabla_\phi \pi_\phi(x)$ are $L_{\pi_1}$- and $L_{\pi_2}$-Lipschitz continuous respectively, with respect to $\phi$. Further, from Lemma~\ref{lem:PAR_smoothness}, $\nabla_a \hat{\mathcal{R}}$ and $\nabla_a \eta$ are both $L_{R_2}$-Lipschitz continuous in $a$. Then the objective function $J(\phi)$ defined in Eq.~\ref{New Objective} is $L$-smooth, i.e., its gradient $\nabla J(\phi)$ is $L$-Lipschitz continuous:
+\[ \|\nabla J(\phi_1) - \nabla J(\phi_2)\| \leq L \|\phi_1 - \phi_2\| \]
+where 
+\begin{equation}
+L = L_{\pi_2}L_{R_1} + L_{\pi_1}L_{R_2}
+\label{eqn:L}
+\end{equation}
+\label{lem:J_smoothness}
+\end{lemma}
+
+\begin{proof}
+The gradient of the objective is given by Eq.~\ref{New Policy Gradient}:
+\[ \nabla_\phi J(\phi) = \mathbb{E}_{x \sim \rho_x} \left[ \nabla_\phi \pi_\phi(x) \cdot \Gamma(x, \pi_\phi(x)) \right] \]
+where $\Gamma(x, a) = \nabla_a ((1-\alpha)\cdot\hat{\mathcal{R}}(x, a) + \alpha \cdot \eta(x, a))$. 
+The difference between gradients at $\phi_1$ and $\phi_2$ is:
+\[ \nabla J(\phi_1) - \nabla J(\phi_2) = \mathbb{E}_{x \sim \rho_x} \left[ (\nabla_\phi \pi_{\phi_1} - \nabla_\phi \pi_{\phi_2}) \Gamma(x, \pi_{\phi_1}) + \nabla_\phi \pi_{\phi_2} (\Gamma(x, \pi_{\phi_1}) - \Gamma(x, \pi_{\phi_2})) \right] \]
+Using the Lipschitz property of $\nabla_\phi \pi_\phi$ and the boundedness of $\Gamma$ (from Lemma~\ref{lem:PAR_smoothness}), the first term is bounded by $M_1 \|\phi_1 - \phi_2\|$, where $M_1=L_{\pi_2}L_{R_1}$. For the second term, since $\Gamma$ is Lipschitz in $a$ and $\pi_\phi$ is Lipschitz in $\phi$, the difference $\|\Gamma(x, \pi_{\phi_1}) - \Gamma(x, \pi_{\phi_2})\|$ is bounded by $M_2 \|\phi_1 - \phi_2\|$, where $M_2=L_{\pi_1}L_{R_2}$. 
+Combining these, $\|\nabla J(\phi_1) - \nabla J(\phi_2)\| \leq L \|\phi_1 - \phi_2\|$ for $L$ in Eq.~\ref{eqn:L}.
+\end{proof}
+
+\newtheorem*{repeatedThm2}{Theorem \ref{thm:convergence}}
+\begin{repeatedThm2}[Convergence of Policy Parameters]
+Consider the sequence of parameters $\{\phi_k\}$ generated by the gradient ascent update rule $\phi_{k+1} = \phi_k + \lambda \nabla J(\phi_k)$ (Eq.~\ref{eqn:phi_update} applied in inner loop of Alg.~\ref{Main Alg}). If the step size $\lambda$ satisfies $0 < \lambda < \frac{2}{L}$ ($L$ defined in Eq.~\ref{eqn:L}), then the sequence converges to a stationary point, i.e.,
+\[ \lim_{k \to \infty} \|\nabla J(\phi_k)\| = 0 \]
+%\label{thm:convergence}
+\end{repeatedThm2}
+
+\begin{proof}
+Since $J(\phi)$ is $L$-smooth (Lemma~\ref{lem:J_smoothness}), we can apply the Descent Lemma (adapted for ascent):
+\[ J(\phi_{k+1}) \geq J(\phi_k) + \langle \nabla J(\phi_k), \phi_{k+1} - \phi_k \rangle - \frac{L}{2} \|\phi_{k+1} - \phi_k\|^2 \]
+Substituting the update rule $\phi_{k+1} - \phi_k = \lambda \nabla J(\phi_k)$:
+\[ J(\phi_{k+1}) \geq J(\phi_k) + \lambda \|\nabla J(\phi_k)\|^2 - \frac{L\lambda^2}{2} \|\nabla J(\phi_k)\|^2 \]
+\[ J(\phi_{k+1}) - J(\phi_k) \geq \lambda \left( 1 - \frac{L\lambda}{2} \right) \|\nabla J(\phi_k)\|^2 \]
+Summing from $k=0$ to $N$:
+\[ J(\phi_{N+1}) - J(\phi_0) \geq \lambda \left( 1 - \frac{L\lambda}{2} \right) \sum_{k=0}^{N} \|\nabla J(\phi_k)\|^2 \]
+
+%Because $\hat{\mathcal{R}}(x,a) \in [r_{\text{min}},r_{\text{max}}]$, $\eta(x,a)\in[0,1]$, and $\alpha >0$, then $J(\phi) \leq r_{\text{max}}+\alpha\cdot1$.
+If $\alpha\in[0,1]$ and $\hat{\mathcal{R}}(x,a)\le r_{\max}~\forall (x,a)$, then $J(\phi) \leq r_{\text{max}}$.
+Since $J(\phi)$ is bounded from above by $r_\text{max}$, the left side is bounded:
+\[ \sum_{k=0}^{\infty} \|\nabla J(\phi_k)\|^2 \leq \frac{r_\text{max} - J(\phi_0)}{\lambda (1 - \frac{L\lambda}{2})} < \infty \]
+For the infinite series to converge, the general term must vanish:
+\[ \lim_{k \to \infty} \|\nabla J(\phi_k)\| = 0 \]
+Thus, the sequence $\{\phi_k\}$ converges to a stationary point of the robust objective in Eq.~\ref{New Objective}.
+\end{proof}
+
+\chapter{Theoretical Analysis of Iterative Deployment Stability}
+\label{sec:iterative_stability}
+
+To analyze the stability of the iterative deployment process described in Sec.~\ref{sec:iterative_deployment}, we investigate the risk of model collapse—where the policy $\pi_\phi$ converges to a narrow, suboptimal region of the action space due to a self-reinforcing feedback loop between the approximate reward model $\hat{\mathcal{R}}$ and the data collection process.
+
+\begin{assumption}[Distributional Coverage]
+\label{asm:distribution_coverage}
+The initial dataset $\mathcal{D}_0$ (containing expert $\pi_E$ and exploration $\pi_\beta$ data) ensures that the initial state-action distribution $\rho_0(x, a)$ satisfies $\inf_{x, a} \rho_0(x, a) \geq \epsilon > 0$ for some small $\epsilon$.
+\end{assumption}
+
+\begin{lemma}[Boundedness of the Density Ratio]
+Let $\rho_{\pi_{\phi_i}}(x, a)$ be the state-action distribution induced by policy $\pi_{\phi_i}$ at iteration $i$. Under Assumption~\ref{asm:distribution_coverage}, the density ratio $w_i(x, a) = \frac{\rho_{\pi_{\phi_i}}(x, a)}{\rho_0(x, a)}$ is bounded such that $\sup_{x, a} w_i(x, a) \leq \frac{1}{\epsilon}$, preventing catastrophic distribution shift during iterative updates.
+\label{lem:bdr}
+\end{lemma}
+
+\begin{proof}
+From Sec.~\ref{sec:iterative_deployment}, the dataset $\mathcal{D}_{i+1}$ is the union of $\mathcal{D}_i$ and the on-policy data $\mathcal{D}_{\pi_{\phi_i}}$. The density of the training set at iteration $i$ is $\rho_i = \frac{1}{i+1} \sum_{j=0}^i \rho_{\pi_{\phi_j}}$. Since $\rho_0$ is the distribution of $\mathcal{D}_0$, and $\rho_0(x, a) \geq \epsilon$ by Assumption~\ref{asm:distribution_coverage}, the ratio $\frac{\rho_{\pi_{\phi_i}}(x, a)}{\rho_0(x, a)}$ is bounded from above by $1/\epsilon$ because the probability density $\rho_{\pi_{\phi_i}}$ is bounded by 1. Thus, the support of the reward model is always maintained, ensuring that the policy does not enter regions of zero data density where the model $\hat{\mathcal{R}}_\theta$ would be undefined.
+\end{proof}
+
+Next, we note that during iterative deployment, the action executed is $a_t = \pi_{\phi_i}(x) + \xi$, where $\xi \sim \mathcal{N}(0, \sigma_{noise}^2)$.
+
+\begin{lemma}[Coverage Guarantee]
+\label{lem:coverage}
+Given the additive Gaussian noise $\xi$ used during the iterative deployment, for any action $a \in \mathcal{A}$ and context $x \in \mathcal{X}$, the probability of sampling action $a$ given policy $\pi_{\phi_i}$ is strictly positive, i.e., $d^{\pi_{\phi_i}}(x, a) > 0$. Consequently, the dataset $D_{i+1} = D_i \cup D_{\pi_{\phi_i}}$ satisfies a condition of persistent excitation over the support of $\mathcal{A}$.
+\end{lemma}
+
+\begin{proof}
+The deployment policy is stochastic and defined by the density $p(a|x) = \frac{1}{\sqrt{2\pi\sigma_{noise}^2}} \exp\left(-\frac{(a-\pi_{\phi_i}(x))^2}{2\sigma_{noise}^2}\right)$. Since the Gaussian distribution has global support over $\mathbb{R}^n$, any $a \in \mathcal{A}$ has a non-zero probability of being sampled in every iteration $i$. Thus, the state-action visitation distribution $\rho_{D_i}(x, a)$ is bounded away from zero for all $a \in \mathcal{A}$, preventing the agent from becoming entirely blind to any region of the action space.
+\end{proof}
+
+Now we evaluate the convergence of the policy parameters $\phi_i$ and the behavior of the gradient approximation error in Eq.~\ref{Approximate New Policy Gradient}.
+
+\begin{lemma}[Reward Model Uncertainty Bound]
+\label{lem:reward_error}
+Assuming the true expected reward function $\mathcal{R}$ is Lipschitz continuous and the underlying context-action distribution has bounded support, the expected error in the reward estimate for a dataset $\mathcal{D}$ is bounded by:
+\begin{equation}
+    \mathbb{E}_{(x,a) \sim \rho_{x,a}} \left[ \left| \hat{\mathcal{R}}_\theta(x, a) - \mathcal{R}(x, a) \right| \right] \leq \mathcal{O}\left( \sqrt{\frac{\ln N}{N}} \right) + \beta \sigma_\theta(x,a),
+\end{equation}
+where $\sigma_\theta$ represents the empirical standard deviation of the ensemble predictions. 
+\end{lemma}
+
+\begin{proof}
+The error term consists of two components: the approximation error of the ensemble mean $\mu_\theta$ and the penalization term $\beta \sigma_\theta$. Since each network $\bar{\mathcal{R}}_{\theta_i}$ is trained on independently sampled mini-batches (Alg.~\ref{Reward Ensemble}, lines 4-5), by Hoeffding's inequality applied to the ensemble mean, the deviation of $\mu_\theta$ from $\mathcal{R}$ decreases with $N$. The term $\beta \sigma_\theta$ explicitly bounds the uncertainty penalty. Combining these yields the result. 
+\end{proof}
+
+Given a dataset $\mathcal{D}_i$ with coverage over the context-action space, the uncertainty-penalized reward model $\hat{\mathcal{R}}_{\theta}$ satisfies $\lim_{\|\mathcal{D}_i\| \to \infty} \mathbb{E}_{x, a} [|\hat{\mathcal{R}}_{\theta}(x, a) - \mathcal{R}(x, a)|] = 0$, since the density of $\mathcal{D}_i$ is non-zero everywhere in the reachable action space by Lemma~\ref{lem:coverage}.
+
+\begin{lemma}[Gradient Approximation Error Convergence]
+The error $\epsilon_i$ between the approximated gradient (Eq.~\ref{Approximate New Policy Gradient}) and the true gradient (Eq.~\ref{New Policy Gradient}) of the robust objective $J(\phi)$ vanishes as the dataset $\mathcal{D}_i$ grows and coverage is maintained:
+\begin{equation}
+\mathbb{E}_{B \sim \mathcal{D}_i} \left[ \| \nabla_{\phi} J(\phi) - \widehat{\nabla_{\phi} J}(\phi) \| \right] \leq C \left( \frac{1}{\sqrt{|B|}} + \| \hat{\mathcal{R}}_{\theta} - \mathcal{R} \|_{\infty} \right),
+\end{equation}
+where $C$ is a constant dependent on the Lipschitz constants of $\pi_\phi$ and $\mathcal{R}$, and $|B|$ is the batch size sampled from $\mathcal{D}_i$.
+\label{lem:gradient_approx_error}
+\end{lemma}
+
+\begin{proof} 
+The gradient approximation in Eq.~\ref{Approximate New Policy Gradient} is a Monte Carlo estimate using the learned reward model $\hat{\mathcal{R}}_\theta$ on a batch $B$. We decompose the expected error into sampling variance and model bias:
+\begin{equation}
+\text{Error} = \underbrace{\mathbb{E} \left[ \| \widehat{\nabla_{\phi} J}(\phi) - \mathbb{E}_{B} [ \widehat{\nabla_{\phi} J}(\phi) ] \| \right]}_{\text{Sampling Variance}} + \underbrace{\| \mathbb{E}_{B} [ \widehat{\nabla_{\phi} J}(\phi) ] - \nabla_{\phi} J(\phi) \|}_{\text{Model Bias}}.
+\end{equation}
+The Sampling Variance term scales as $O(1/\sqrt{|B|})$ by the Central Limit Theorem applied to the batch sampling.
+The Model Bias term arises from substituting $\hat{\mathcal{R}}_\theta$ for $\mathcal{R}$. By the Lipschitz continuity of the policy gradient $\nabla_\phi \pi_\phi$ and the reward function gradients (Lemma~\ref{lem:PAR_smoothness}), the difference in gradients is bounded by the uniform norm of the reward difference: $\| \nabla_\phi \widehat{J} - \nabla_\phi J \| \leq L_{\pi} \| \hat{\mathcal{R}}_\theta - \mathcal{R} \|_{\infty}$. By Lemma~\ref{lem:reward_error}, $\| \hat{\mathcal{R}}_\theta - \mathcal{R} \|_{\infty} \to 0$ as $|\mathcal{D}_i| \to \infty$ under the coverage guarantees of Lemma~\ref{lem:coverage}.
+Thus, the total error is bounded by the sum of the variance and the vanishing bias.
+\end{proof}
+
+\begin{theorem}[Stability of Iterative Deployment]
+The iterative sequence of policies $\{ \pi_{\phi_i} \}$ generated by Algorithm 2 converges to a stationary point of the true robust objective $J(\phi)$, and the system is stable against model collapse.
+\end{theorem}
+
+\begin{proof} 
+We analyze the iterative update $\phi_{i+1} = \phi_i + \lambda \widehat{\nabla_\phi J}(\phi_i)$ where the objective $J$ at iteration $i$ utilizes the reward model $\hat{\mathcal{R}}_\theta^{(i)}$ trained on $\mathcal{D}_i$.
+Let $J_i(\phi) = \mathbb{E}_{x \sim \rho_x} [ (1-\alpha)\hat{\mathcal{R}}_\theta^{(i)}(x, \pi_\phi(x)) + \alpha \eta(x, \pi_\phi(x)) ]$ denote the approximate objective at iteration $i$.
+From Lemma~\ref{lem:J_smoothness} and Theorem~\ref{thm:convergence}, the inner loop policy optimization (Algorithm 2, Lines 4-8) converges to a stationary point $\phi^*_i$ of $J_i(\phi)$ (within a neighborhood dependent on step size $\lambda$).
+From Lemma~\ref{lem:gradient_approx_error}, the gradient error 
+%$\epsilon$ is bounded but \textcolor{red}{does not $\to$ 0}.
+$\epsilon_i \to 0$ as $i \to \infty$ due to the convergence of $\hat{\mathcal{R}}_\theta^{(i)} \to \mathcal{R}$ (Lemma~\ref{lem:reward_error}) and sampling variance $\to 0$ as $|B_i|\propto |D_i|$ and $|D_i|\to\infty$.
+Consequently, the sequence of objectives $J_i(\phi)$ converges uniformly to the true objective $J(\phi)$ over the compact parameter space $\Phi$.
+Since the sequence of stationary points $\{ \phi^*_i \}$ corresponds to a sequence of objectives converging uniformly to $J(\phi)$, the limit policy $\phi^* = \lim_{i \to \infty} \phi^*_i$ must satisfy $\nabla_\phi J(\phi^*) = 0$ (assuming isolated stationary points).
+The stability against model collapse is ensured because Lemma~\ref{lem:bdr} and Lemma~\ref{lem:coverage} prevent the support of $\mathcal{D}_i$ from collapsing, thereby maintaining the validity of the reward model estimation across the action space.
+\end{proof}
 
 \end{document}

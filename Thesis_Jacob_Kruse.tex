@@ -22,6 +22,9 @@
 \usepackage{mathrsfs}
 \usepackage{subcaption}
 \usepackage{multirow}
+\usepackage{bbm}
+\usepackage{tabularray}
+\usepackage{dsfont}
 
 \newtheorem{theorem}{Theorem}
 \newtheorem{lemma}{Lemma}
@@ -50,7 +53,7 @@
 
 
 % Title and Author Settings ================================================ %
-\newcommand{\doctitle}{Learning Robust Actions from Reward Modeling}
+\newcommand{\doctitle}{Learning Dexterous Manipulation from Robust Reward Modeling}
 \newcommand{\docauthor}{Jacob Kruse}
 \hypersetup{
   pdftitle={\doctitle},
@@ -64,7 +67,7 @@
 %--------------------------ABSTRACT---------------------------%
 \input{metafiles/abstractpage.tex}
 \makeabstract{%
-Reinforcement learning (RL) has shown strong performance in simulation, but applying RL to real-world robotic tasks remains challenging due to environmental uncertainty, high-dimensionality, data collection, and safety considerations. Incorporating strategies from Robust, Offline, and Model-Based RL, this work proposes a policy learning framework for Contextual Bandit settings to tackle the many challenges of real-world RL. An initial data collection strategy is implemented to promote sample diversity and efficiency. An ensemble of reward networks are trained on the data and used to predict the expected reward and to penalize uncertain estimates. To improve robustness, a new objective called the Perturbed Action Robustness (PAR) objective is introduced, encouraging policies to select actions that achieve high reward and remain stable under action perturbations. The method further incorporates iterative deployment and data aggregation to continuously refine the reward model and policy. Experimental results in a custom Gym environment and a real-world robotic task demonstrate that the proposed approach improves policy performance compared to baseline methods.
+Reinforcement learning (RL) has shown strong performance in simulation, but applying RL to real-world tasks remains challenging due to environmental uncertainty, high-dimensionality, data collection, and safety considerations. Incorporating strategies from robust, offline, and model-based RL, this work proposes a policy learning framework for contextual bandit settings to tackle the many challenges of real-world RL. An initial data collection strategy is implemented to promote sample diversity. An ensemble of reward networks are trained on the data and used to predict the reward and to penalize uncertain estimates. A new objective called the Perturbed Action Robustness (PAR) objective is introduced, encouraging selection of actions that achieve high reward and remain stable under perturbations. The method further incorporates iterative deployment and data aggregation to continuously refine the reward model and policy. Experimental results in a custom gym environment and a robotic grasping task demonstrate improved performance compared to baseline methods. 
 }%
 
 
@@ -112,7 +115,7 @@ Bachelor of Science, Western Illinois University, 2024
   Ron Walcott\\
   Dean of the Graduate School\\
   The University of Georgia\\
-  May 2026
+  June 2026
 \end{flushleft}
 \vspace*{1.5cm}
 

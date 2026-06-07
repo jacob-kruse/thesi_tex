@@ -2,20 +2,19 @@
 \begin{document}
 
 \chapter{Introduction}
-Reinforcement learning (RL) has achieved remarkable success in simulation, where agents can execute many actions and easily evaluate rewards. In simulated environments, large amounts of data can be generated quickly and safely, allowing policies to improve through extensive trial and error. For instance, \parencite{SimGrasp} trains a robotic manipulator in simulation to perform a variety of manipulation tasks, while \parencite{DeepQ} applies RL to teach an agent to play Atari games. These methods demonstrate the ability of RL algorithms to learn complex behaviors when there are large amounts of interaction data available to the agent. 
+Reinforcement learning (RL) has achieved remarkable success in simulation, where agents can execute many actions and easily evaluate rewards. In simulated environments, large amounts of data can be generated quickly and safely, allowing policies to improve through extensive trial and error. For instance, \cite{SimGrasp} trains a robotic manipulator in simulation to perform a variety of manipulation tasks, while \cite{DeepQ} uses RL to train an agent to play Atari games. These methods demonstrate the ability of RL algorithms to learn complex behaviors when there are large amounts of interaction data available to the agent. 
 
-Recently, RL has been increasingly applied to real-world tasks, motivated by the desire to tackle challenging problems beyond simulation. For example, \parencite{LegRL} demonstrates how a legged robot can learn to traverse real world terrains, and \parencite{wu2023daydreamer} shows the application of their method to multiple physical platforms, including a quadruped robot, a robotic manipulator, and Sphero robot. Another prominent application of real-world RL is robotic grasping \parencite{ManipSurvey}, due to its widespread relevance in manipulation tasks such as warehouse automation and manufacturing. In these domains, robust grasping strategies are essential for practical deployment. 
+Recently, RL has been increasingly applied to real-world tasks, motivated by the desire to tackle challenging problems beyond simulation. For example, \cite{LegRL} demonstrates how a legged robot can learn to traverse real world terrains, and \cite{wu2023daydreamer} shows the application of their method to multiple physical platforms, including a quadruped robot, a robotic manipulator, and Sphero robot. Another prominent application of real-world RL is robotic grasping \parencite{ManipSurvey}, due to its widespread relevance in manipulation tasks such as warehouse automation and manufacturing. In these domains, robust grasping strategies are essential for practical deployment. 
 
 Despite this progress, the application of RL in the real world remains significantly more difficult than in simulation. The use of physical systems introduces uncertainty in sensing and actuation, while environmental factors introduce variability that further complicates learning. Additionally, robotic tasks often involve high-dimensional continuous state and action spaces, leading to challenges associated with the curse of dimensionality. Data collection is also costly and time-consuming, as it requires executing actions on physical hardware. Furthermore, safety must be considered to avoid damaging equipment or causing injury. These challenges make it difficult to apply traditional RL methods, which typically rely on large amounts of accurate data obtained through online interaction.
 
-Offline reinforcement learning is a popular strategy for addressing these limitations in physical systems. Offline RL methods learn policies entirely from pre-collected datasets without requiring additional environmental interaction during training. This greatly improves sample efficiency by enabling the algorithm to focus entirely on policy optimization rather than exploration. However, offline RL introduces its own challenges, most notably distribution shift. Since the learned policy may select actions that differ from those present in the dataset, the value estimates for these actions cannot be evaluated reliably. 
+Offline reinforcement learning is a popular strategy for addressing these limitations in physical systems. Offline RL methods learn policies entirely from pre-collected datasets without additional environmental interaction during training. This greatly improves sample efficiency by enabling the algorithm to focus entirely on policy optimization rather than exploration. However, offline RL introduces its own challenges, most notably distribution shift. Since the learned policy may select actions that differ from those present in the dataset, the value estimates for these actions cannot be evaluated reliably. 
 
-To mitigate this issue, many offline RL approaches incorporate techniques such as regularization and policy constraints. Regularization involves adding a term to the learning objective that encourages desirable behaviors in the learned policy, such as safer actions, improved exploration, or policy outputs that remain close to the collected data distribution. Incentivizing these behaviors can help stabilize training and reduce the risk or exploiting inaccuracies in value estimates. 
+To mitigate this issue, many offline RL approaches incorporate techniques such as regularization and policy constraints. Regularization involves adding a term to the learning objective that encourages desirable behaviors in the learned policy, such as safer actions, improved exploration, or policy outputs that remain close to the collected data distribution. Incentivizing these behaviors can help stabilize training and reduce the risk of exploiting inaccuracies in value estimates. 
 
-Similarly, Maximum Entropy Reinforcement Learning (MaxEnt RL) \parencite{MaxEntRL} alters the standard RL objective by incorporating an entropy term to the reward. This encourages the policy to maximize both expected return and entropy, promoting stochasticity in the policy and encouraging broader action distributions. While this resembles regularization with the additional term, MaxEnt RL fundamentally redefines the optimization objective. A well-known example is Soft Actor-Critic (SAC) \parencite{SAC}, which optimizes the MaxEnt objective and has demonstrated strong performance in continuous control tasks. 
+Similarly, maximum entropy reinforcement learning (MaxEnt RL) \parencite{MaxEntRL} alters the standard RL objective by incorporating an entropy term. This encourages the policy to maximize both expected return and entropy, promoting stochasticity in the policy and encouraging broader action distributions. While this resembles regularization with the additional term, MaxEnt RL fundamentally redefines the optimization objective. A well-known example is Soft Actor-Critic (SAC) \parencite{SAC}, which optimizes the MaxEnt objective and has demonstrated strong performance in continuous control tasks. 
 
-% Needs to be edited, but waiting for final formulation. 
-Inspired by these approaches, this work proposes an alternative objective that promotes robustness in the selected actions. A policy that chooses actions that perform well in ideal conditions but fail in practice due to noise from imperfect actuation, sensing, or environmental disturbances is undesirable. Therefore, we encourage the policy to select actions that not only achieve high reward but also remain effective under small perturbations. The PAR function is illustrated in Figure \ref{fig:PAR_Figure} below. 
+Inspired by these approaches and with real-world deployment in mind, this work introduces a policy learning framework for contextual bandits centered around a novel robustness measure called the Perturbed Action Robustness (PAR) function. The PAR function measures an action's robustness to noise and is incorporated into the RL objective, encouraging the selection of actions that are both high reward and land in high reward regions. An illustration of the PAR function is provided in Figure \ref{fig:PAR_Figure}. To optimize this objective, an approximate reward model is learned using an initial data collection strategy designed to promote diversity and broad input coverage. This learned model is represented by an ensemble of networks to improve reward estimation and to penalize uncertain predictions. Finally, after a policy is trained with the PAR objective, the policy is repeatedly deployed to collect on-policy data, which is aggregated to iteratively improve both the reward model and policy. The approach is evaluated in simulation using a custom Gym environment and on a physical robotic manipulation task.
 
 \begin{figure}[h]
     \centering
@@ -43,15 +42,13 @@ Inspired by these approaches, this work proposes an alternative objective that p
 \end{figure}
 
 \section{Contributions}
-In this paper, we introduce a framework that learns an approximate reward model and leverages it for iterative policy optimization with a novel robustness-oriented objective. Our approach is inspired by ideas from Soft Actor-Critic and Maximum Entropy Reinforcement Learning. The data collection strategy helps provide a diverse dataset for learning an accurate initial reward model. By learning an approximate reward function, we are able to efficiently and accurately predict rewards for a large number of state-action pairs. Focusing on action robustness during optimization encourages policies that are more tolerant to perturbations in real-world execution. Finally iterative deployment allows the method to obtain on-policy data and evaluate the effectiveness of the converged policy before further improvement. The main contributions of this work are:
-
 Motivated by the challenges of real-world RL and inspired by regularization-based approaches, this work makes the following contributions:
 \begin{itemize}
-    \item A robustness measure, the Perturbed Action Robustness (PAR) function, which is incorporated into the standard RL learning objective to produce the PAR objective which encourages selection of actions that are both high-reward and robust to perturbations.
+    \item A robustness measure, the Perturbed Action Robustness (PAR) function, which is incorporated into the standard RL learning objective to produce the PAR objective, encouraging selection of actions that are both high-reward and robust to perturbations.
     \item A policy learning framework that:
     \begin{itemize}
         \item Uses an initial data collection strategy to produce diverse yet sample-efficient datasets.
-        \item Learns an ensemble of reward functions to quantify and penalize uncertainty.
+        \item Learns an ensemble of expected reward functions to quantify and penalize uncertainty.
         \item Iteratively trains and deploys a policy optimized with the proposed robust objective to refine both the reward model and the policy.
     \end{itemize}
     \item Evaluation of the proposed method in a custom Gym environment and a physical robotic sorting task, demonstrating improved performance compared to baseline methods. 
@@ -63,31 +60,16 @@ The remainder of this thesis is organized as follows:
 
 \begin{itemize}
 
-    \item \textbf{Chapter 2 - Related Work:} This chapter reviews prior work on Learning Grasp Success Models, Robust Reinforcement Learning, Offline Reinforcement Learning, and Model-Based Reinforcement Learning. While these areas share similarities with the proposed method, they differ from the approach presented in this work.
+    \item \textbf{Chapter $\mathbf{2}$ -- Related Work:} This chapter reviews prior work on learning grasp success models, robust reinforcement learning, offline reinforcement learning, and model-based reinforcement learning. While these areas share similarities with the proposed method, they differ from the approach presented in this work.
 
-    \item \textbf{Chapter 3 - Preliminaries:} This chapter introduces the foundational concepts necessary to understand the proposed method. Section 3.1 defines the $blank$ framework used to model the grasping problem, while Section 3.2 describes how reward models can be learned using supervised learning techniques.
+    \item \textbf{Chapter $\mathbf{3}$ -- Foundational Concepts:} This chapter introduces the foundational concepts necessary to understand the proposed method. The contextual bandit framework, policy gradient reinforcement learning, reward modeling, and regularization are presented to provide the necessary background.
 
-    \item \textbf{Chapter 4 - Methodolgy:} This chapter presents the proposed method in detail. Section 4.1 describes strategies used to learn an accurate reward model, including an effective data collection strategy and the use of ensemble networks capture uncertainty. Section 4.2 introduces the main algorithm for policy learning, which utilizes the newly defined PAR objective and an iterative deployment strategy to progressively improve the the policy.
+    \item \textbf{Chapter $\mathbf{4}$ $\mathbf{-}$ Methodology:} This chapter presents the proposed method in detail. First, it describes strategies for learning an accurate reward model, including an effective data collection strategy and the use of ensemble networks to capture uncertainty. Then, it introduces the main algorithm for policy learning, which utilizes the newly defined PAR objective and an iterative deployment strategy to progressively improve the the policy.
 
-    \item \textbf{Chapter 5 - Experiments:} This chapter describes the experimental evaluation of the method. It includes details of the robotic grasping setup, datasets used, evaluation metrics, and results demonstrating the robustness of the proposed approach.
+    \item \textbf{Chapter $\mathbf{5}$ $\mathbf{-}$ Experiments:} This chapter describes the experimental evaluation of the proposed method. It includes details of the simulation setup, robotic grasping setup, baselines, and results demonstrating the robustness of the proposed approach.
 
-    \item \textbf{Chapter 6 - Conclusion:} This final chapter summarizes the contributions of the thesis, discusses the implications of the results, and outlines possible directions for future work.
+    \item \textbf{Chapter $\mathbf{6}$ $\mathbf{-}$ Conclusion:} This final chapter summarizes the contributions of the thesis, discusses the implications of the results, and outlines possible directions for future work.
 
 \end{itemize}
-
-    % \begin{table}[ht]
-    % \centering
-
-    % \begin{tabular}[c]{|l|c|rc|}
-    % \hline
-    % left justified  & centerd  & right justified  & no left border\\
-    % \hline
-    % row 1 & fill & in between & the \&s\\
-    % row 2 & & &\\
-    % \hline
-    % \end{tabular}
-    % \caption{Hyper Parameters}
-    % \label{table:someTable}
-    % \end{table}
 
 \end{document}

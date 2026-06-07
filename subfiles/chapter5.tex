@@ -3,60 +3,72 @@
 
 \chapter{Experiments}
 \label{Experiments}
-% Rewrite when finished, add something about metrics evaluated 
-To evaluate the proposed method, experiments were done on a sorting task for recyclable items with a robotic manipulator. The following experiments are the main contributions of this paper.
+This chapter presents the experiments conducted on the proposed approach. Section \ref{sec:sim_setup} describes the simulation experimental setup in detail, including the environment and evaluation functions. Section \ref{sec:phys_setup} then details the physical experimental setup, outlining the robotic platform and task configuration. Section \ref{sec:baselines} introduces the robust RL baselines used for comparison, highlighting their relevance to the method. Finally, in Section \ref{sec:exps_and_results}, the proposed method is evaluated in both simulation and on the robotic manipulation task, with the results presented and analyzed. Together, these experiments provide an insightful assessment of the proposed approach, which shows improved performance over the robust RL baselines in the simulated and real-world settings.
 
-\section{Experimental Setup}
-This section describes the experimental framework used to evaluate the proposed method. The task setup is detailed, including the robotic and sensing hardware, as well as the overall behavior of the agent within the environment. Furthermore, the perception of the workspace state and its transformation into both the true and encoded context representations is explained. And finally, the action and reward definitions are described in detail. All of these components define a complete system in which the robot can apply the proposed approach to a real-world grasping task for sorting recyclable items.
-
-\subsection{Buffalo Gym Environment}
-Buffalo Gym \parencite{BuffaloGym} is a third-party gymnasium environment that allows experimentation on a number of different bandit formulations. The environment is single-state, but allows the user to generate stochastic reward functions, making it easy to perform analysis of different optimization procedures on a wide range of functions. Experiments were performed on the ``Boundless Buffalo'' which allows for bandits with continuous actions. Modifications have been made to the original repository to allow for pre-defined stochastic reward functions in order to produce a reward landscape that requires robustness for success. Five different rewards functions were produced, shown in Figure \ref{fig:functions} below. The fork of the Buffalo Gym repository with the necessary modifications can be found at \href{https://github.com/thinclab/buffalo-gym}{https://github.com/thinclab/buffalo-gym}.
-
+\section{Simulation Experimental Setup}
+\label{sec:sim_setup}
+To evaluate different components of the method in a simulated setting, the Buffalo Gym \parencite{BuffaloGym} environment was utilized. Buffalo Gym is a third-party gymnasium environment that allows experimentation on a variety of bandit formulations. The environment is single-state, but allows the user to generate stochastic reward functions, making it easy to perform analysis on different optimization procedures with a wide range of functions. Experiments were performed on the ``Boundless Buffalo'' which supports continuous action spaces, with some custom modifications to allow for predefined stochastic reward functions. Five such reward functions were produced, shown in Figure \ref{fig:functions} with the corresponding maximum action perturbations shown in Table \ref{tab:max_noises}. These functions were chosen specifically so that the reward landscape requires robustness for success. The fork of the Buffalo Gym repository can be found at the following link: \href{https://github.com/thinclab/buffalo-gym}{https://github.com/thinclab/buffalo-gym}.
 \begin{figure}[H]
     \centering
-    \begin{minipage}[c]{0.485\textwidth}
+    \begin{minipage}[c]{0.325\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figures/Functions/1.png}
         \subcaption{}
         \label{fig:func1}
     \end{minipage}
     \hspace{0.01\textwidth}
-    \begin{minipage}[c]{0.485\textwidth}
+    \begin{minipage}[c]{0.325\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figures/Functions/2.png}
         \subcaption{}
         \label{fig:func2}
     \end{minipage}
-    \begin{minipage}[c]{0.485\textwidth}
+    \hspace{0.01\textwidth}
+    \begin{minipage}[c]{0.325\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figures/Functions/3.png}
         \subcaption{}
         \label{fig:func3}
     \end{minipage}
-    \hspace{0.01\textwidth}
-    \begin{minipage}[c]{0.485\textwidth}
+    \begin{minipage}[c]{0.325\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figures/Functions/4.png}
         \subcaption{}
         \label{fig:func4}
     \end{minipage}
-    \begin{minipage}[c]{0.485\textwidth}
+    \hspace{0.01\textwidth}
+    \begin{minipage}[c]{0.325\textwidth}
         \centering
         \includegraphics[width=\textwidth]{figures/Functions/5.png}
         \subcaption{}
         \label{fig:func5}
     \end{minipage}
-    \caption{Buffalo Gym Reward Functions for Evaluation.}
+    \caption[Buffalo Gym Expected Reward Functions.]{Buffalo Gym Expected Reward Functions. Each figure above represents one of the five expected reward functions used for evaluation.}
     \label{fig:functions}
 \end{figure}
 
-\subsection{Physical Task Description}
-The proposed task is to autonomously sort recyclable items within a constrained workspace. The item set consists of aluminum cans and plastic bottles with varying degrees of deformation, which introduces variability in shape and grasp difficulty. The object manipulation is performed with a KUKA LBR iisy 3 r760 collaborative robotic arm equipped with an Ubiros Gentle Pro gripper at the end effector. The context of the workspace is captured using an overhead Oak-D S2 RGB-D camera, which provides synchronized color and depth images of the scene. These images are processed and encoded to form the input to the learned policy. The policy outputs continuous control actions for the manipulator, specifying the relative end effector placement. After executing the policy action with the corresponding motion trajectory, the robot automatically closes the gripper to secure the object, moves to the recycling bin, and opens the gripper to release any grasped object. An action is considered successful if the robot is able to securely grasp the assigned object and transport it to the recycling bin. The experimental setup is illustrated in Figure \ref{Workspace}, the overall sorting procedure is summarized in Algorithm \ref{Sorting Loop}, and an example of robot a trajectory is shown in Figure \ref{fig:trajectory}.
-\begin{figure}[H]
-\centering\includegraphics[width=0.375\textwidth]{figures/Workspace Labeled.png}
-\caption[Experimental Setup.]{Experimental Setup. A KUKA robotic manipulator is used to grab aluminum cans and plastic bottles located on a conveyor belt. An Oak-D RGB-D camera captures images of the scene, from which the 3D position and orientation of each item is calculated. With this information, the manipulator executes grasping actions to move the recyclable items to a recycling bin}
-\label{Workspace}
-\end{figure}
+\begin{table}[H]
+\centering
+\caption[Maximum Action Perturbations.]{Maximum Action Perturbations. The maximum action perturbation $\delta_{\text{max}}$ for each Buffalo Gym expected reward function is listed.}
+\label{tab:max_noises}
+\begin{tblr}{
+  colspec = {lccccc},
+  width = \textwidth,
+  hline{1,Z} = {1pt},
+  hline{2} = {0.7pt}
+}
+& Function $1$ & Function $2$ & Function $3$ & Function $4$ & Function $5$ \\
+$\mathbf{\delta_\text{max}}$ & $0.25$ & $0.19$ & $0.35$ & $0.75$ & $0.25$ \\
+\end{tblr}
+\end{table}
+
+\section{Physical Experimental Setup}
+\label{sec:phys_setup}
+This section describes the experimental setup used to evaluate the proposed method in a robotic manipulation environment. The setup consists of camera-based perception system and a KUKA collaborative robot equipped with an Ubiros gripper. The goal of the system is to autonomously sort recyclable objects within the workspace. The code for this project can be found at: \href{https://github.com/thinclab/recycrl}{https://github.com/thinclab/recycrl}.
+
+\subsection{Robotic Task Description}
+The proposed task is to autonomously sort recyclable items within a constrained workspace. The item set consists of aluminum cans and plastic bottles with varying degrees of deformation, which introduces variability in shape and grasp difficulty. The object manipulation is performed with a KUKA LBR iisy $3$ r$760$ collaborative robotic arm equipped with an Ubiros Gentle Pro gripper at the end effector. The context of the workspace is captured using an overhead Oak-D S$2$ RGB-D camera, which provides synchronized color and depth images of the scene. These images are processed and encoded to form the input to the learned policy. The policy outputs continuous control actions for the manipulator, specifying the relative end effector placement. After executing the policy action with the corresponding motion trajectory, the robot automatically closes the gripper to secure the object, moves to the recycling bin, and opens the gripper to release any grasped object. An action is considered successful if the robot is able to securely grasp the assigned object and transport it to the recycling bin. The experimental setup is illustrated in Figure \ref{Workspace}, the overall sorting procedure is summarized in Algorithm \ref{Sorting Loop}, and an example of robot a trajectory is shown in Figure \ref{fig:trajectory}.
+
 \begin{minipage}{\textwidth}
 \singlespacing
 \refstepcounter{algorithm}
@@ -85,7 +97,11 @@ The proposed task is to autonomously sort recyclable items within a constrained 
 \hrule
 \tagmcend{}
 \end{minipage}
-
+\begin{figure}[H]
+\centering\includegraphics[width=0.375\textwidth]{figures/Workspace Labeled.png}
+\caption[Physical Experimental Setup.]{Physical Experimental Setup. A KUKA robotic manipulator is used to grab aluminum cans and plastic bottles located on a conveyor belt. An Oak-D RGB-D camera captures images of the scene, from which the $3$D position and orientation of each item is calculated. With this information, the manipulator executes grasping actions to move the recyclable items to a recycling bin}
+\label{Workspace}
+\end{figure}
 \begin{figure}[H]
     \centering
     \begin{minipage}[c]{0.195\textwidth}
@@ -107,20 +123,16 @@ The proposed task is to autonomously sort recyclable items within a constrained 
         \centering
         \includegraphics[width=\textwidth]{figures/Trajectory/5.png}
     \end{minipage}
-    \caption[Robot Trajectory.]{Robot Trajectory. An action is executed by moving to the grasp point, attempting a grasp, moving to the bin, and opening the gripper to deposit an item.}
+    \caption[Robot Trajectory.]{Robot Trajectory. An example trajectory is shown in the frames above. The robot starts at home, moves to the grasp position, grabs the bottle, and moves to the bin where it deposits the item.}
     \label{fig:trajectory}
 \end{figure}
 
 
 \subsection{Context Estimation}
-The context of the workspace is obtained using images from an overhead RGB-D camera. When the current context is requested, the camera captures an RGB image and a corresponding depth image of the workspace. The RGB image is passed through a YOLO v11 instance segmentation model, which produces pixel-wise masks of the aluminum cans and plastic bottles present in the scene. The YOLO model was trained on a combination of publicly available datasets containing annotated images of general cans and bottles, as well as a custom dataset containing images collected directly from the workspace with manual annotation. Incorporating general and task-specific data enables the model to generalize and maintain accuracy for specific objects with the instance segmentation procedure. 
+The context of the workspace is obtained using images from an overhead RGB-D camera. When the current context is requested, the camera captures an RGB image and a corresponding depth image of the workspace. The RGB image is passed through a YOLO v$11$ instance segmentation model, which produces pixel-wise masks of the aluminum cans and plastic bottles present in the scene. The YOLO model was trained on a combination of publicly available datasets containing annotated images of general cans and bottles, as well as a custom dataset containing images collected directly from the workspace with manual annotation. Incorporating general and task-specific data enables the model to generalize and maintain accuracy for specific objects with the instance segmentation procedure. 
 
-After obtaining the segmented instances from the RGB image, Principal Component Analysis (PCA) \parencite{PCA} is performed on the mask of each item. PCA provides an efficient method to calculate different geometric properties from the object masks, and is first utilized to compute the centroid. The centroid represents the average position of all the pixels in the object mask, effectively providing a 2D estimate of the object's center in the image plane. In addition to the centroid, PCA is utilized to calculate the principal axis of each mask, which is used to indicate the orientation of the each object in the image. Figure \ref{State Estimation} provides a visual overview of this process, showing the initial RGB image, the extracted object masks, and the result of the PCA analysis on each mask.
-
-The corresponding depth image is then used to recover the 3D position of the centroid from its 2D location in the image. Using the camera intrinsics and a standard pinhole model, the pixel corresponding to the centroid can be projected along a 3D ray. The depth value at the centroid's pixel represents the distance along this ray, allowing the computation of the object's centroid relative to the camera. This 3D position is transformed from the camera's local coordinate frame to the robot's global coordinate frame using ROS2 transformations. 
-
-The principal axis obtained from PCA defines the object's yaw angle in the robot frame. However, for a complete 6D pose representation, the pitch angle must also be estimated. To compute the pitch, a two-point method is employed. Two points are selected near opposite ends of the object along the principal axis. The 3D positions of these points are recovered from the depth image using the same strategy applied to the centroid. Let the vertical difference between the two points be $\Delta z$, and let the planar displacement in the $xy$-plane be $\Delta xy$. The pitch angle is then computed by $\omega=\arctan{\frac{\Delta z}{\Delta xy}}$, which provides a measure of the object's incline relative to the workspace plane. Due to assumed axial symmetry of the bottles and cans, the roll angle is assumed to be zero. Therefore, the full 6D pose of the each object is defined by the 3D position of the centroid and the estimated pitch and yaw angles.
-\begin{figure}[h]
+After obtaining the segmented instances from the RGB image, principal component analysis (PCA) \parencite{PCA} is performed on the mask of each item. PCA provides an efficient method to calculate different geometric properties from the object masks, and is first utilized to compute the centroid. The centroid represents the average position of all the pixels in the object mask, effectively providing a $2$D estimate of the object's center in the image plane. In addition to the centroid, PCA is utilized to calculate the principal axis of each mask, which is used to indicate the orientation of the each object in the image. Figure \ref{State Estimation} provides a visual overview of this process, showing the initial RGB image, the extracted object masks, and the result of the PCA analysis on each mask.
+\begin{figure}[H]
     \centering
     \begin{subfigure}{0.32\textwidth}
         \centering
@@ -142,13 +154,17 @@ The principal axis obtained from PCA defines the object's yaw angle in the robot
         \subcaption{}
         \label{PCA}
     \end{subfigure}
-    \caption[Context Estimation.]{Context Estimation. Figure~\ref{OG} shows the original RGB image. This image is passed through a YOLO v$11$ instance segmentation model to obtain masks of the bottles and cans, as shown in Figure~\ref{Masks}. Principal Componet Analysis (PCA) is performed on the masks to determine the centroid and principal axes, shown in Figure~\ref{PCA}}
+    \caption[Context Estimation.]{Context Estimation. Figure~\ref{OG} shows the original RGB image. This image is passed through a YOLO v$11$ instance segmentation model to obtain masks of the bottles and cans, as shown in Figure~\ref{Masks}. Principal component analysis (PCA) is performed on the masks to determine the centroid and principal axes, shown in Figure~\ref{PCA}}
     \label{State Estimation}
 \end{figure}
 
+The corresponding depth image is then used to recover the $3$D position of the centroid from its $2$D location in the image. Using the camera intrinsics and a standard pinhole model, the pixel corresponding to the centroid can be projected along a $3$D ray. The depth value at the centroid's pixel represents the distance along this ray, allowing the computation of the object's centroid relative to the camera. This $3$D position is transformed from the camera's local coordinate frame to the robot's global coordinate frame using ROS$2$ transformations. 
+
+The principal axis obtained from PCA defines the object's yaw angle in the robot frame. However, for a complete $6$D pose representation, the pitch angle must also be estimated. To compute the pitch, a two-point method is employed. Two points are selected near opposite ends of the object along the principal axis. The $3$D positions of these points are recovered from the depth image using the same strategy applied to the centroid. Let the vertical difference between the two points be $\Delta z$, and let the planar displacement in the $xy$-plane be $\Delta xy$. The pitch angle is then computed by $\omega=\arctan{\frac{\Delta z}{\Delta xy}}$, which provides a measure of the object's incline relative to the workspace plane. Due to assumed axial symmetry of the bottles and cans, the roll angle is assumed to be zero. Therefore, the full $6$D pose of the each object is defined by the $3$D position of the centroid and the estimated pitch and yaw angles.
+
 \subsection{Context Definition}
 \label{Context Definition}
-Because the robot focuses on grasping one item at a time, the context representation only includes the 6D pose of the selected target. This approach greatly reduces the context space by concentrating on the object that is relevant for the current grasping action, rather than including the positions and orientations of all other objects, which is difficult when the number of items is dynamic. Therefore, the context captures the position and orientation of the active object in 3D space, along with basic contextual information about the scene. Formally the context is defined as:
+Because the robot focuses on grasping one item at a time, the context representation only includes the $6$D pose of the selected target. This approach greatly reduces the context space by concentrating on the object that is relevant for the current grasping action, rather than including the positions and orientations of all other objects, which is difficult when the number of items is dynamic. Therefore, the context captures the position and orientation of the active object in $3$D space, along with basic contextual information about the scene. Formally the context is defined as:
 \[
 \mathbf{x}=[x , y, z, \omega, \psi, t, n],
 \]
@@ -169,7 +185,7 @@ Because the true context space is continuous, there are infinitely many possible
 \mathbf{\hat{x}} = [q, \Omega, \Psi, t],
 \]
 where $q \in \{ 1,2,3,4 \}$ denotes the spatial quadrant of the object, $\Omega \in \{ 1,2,3 \}$ represents the discretized pitch bin, $\Psi \in \{ 1,2,3,4 \}$ denotes the discretized yaw bin, and $t$ represents the object type. This encoding provides a simplified yet informative summary of the object and reduces the continuous context to a compact representation that is suitable for reward modeling and policy learning. Figure \ref{Discretized Workspace} shows the discretized workspace along with an example of an item mapped to the corresponding quadrant and orientation bins. Although an encoded, discretized context $\mathbf{\hat{x}}$ is produced, the true context $\mathbf{x}$ is preserved to build an absolute pose for the gripper from the relative action (see Section \ref{Action Definition}).
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \begin{subfigure}{0.49\textwidth}
         \centering
@@ -197,7 +213,7 @@ where $q \in \{ 1,2,3,4 \}$ denotes the spatial quadrant of the object, $\Omega 
 
 \subsection{Action Definition}
 \label{Action Definition}
-The actions for the sorting task define how the robotic manipulator moves prior to attempting a grasp. Rather than directly commanding joint angles or the absolute pose of the end effector in the world coordinate frame, each action specifies a relative displacement of the tool center point (TCP) or center of the gripper with respect to the pose of the target object. In other words, the action represents a position and orientation of the gripper relative to the currently selected item. In this formulation, the sole aim of the policy is to learn gripper configurations that lead to successful grasps, without reasoning about the dynamics or planning of the robotic arm. To fully capture the 6D pose of the gripper in 3D space, the action is defined as a 6-dimensional, continuous vector:
+The actions for the sorting task define how the robotic manipulator moves prior to attempting a grasp. Rather than directly commanding joint angles or the absolute pose of the end effector in the world coordinate frame, each action specifies a relative displacement of the tool center point (TCP) or center of the gripper with respect to the pose of the target object. In other words, the action represents a position and orientation of the gripper relative to the currently selected item. In this formulation, the sole aim of the policy is to learn gripper configurations that lead to successful grasps, without reasoning about the dynamics or planning of the robotic arm. To fully capture the $6$D pose of the gripper in $3$D space, the action is defined as a $6$-dimensional, continuous vector:
 \[
 \mathbf{a} = [\Delta l, \Delta w, \Delta h, \Delta \varphi, \Delta \omega, \Delta \psi],
 \]
@@ -207,6 +223,11 @@ where $\Delta l, \Delta w, \Delta h$ denote relative Cartesian offsets in meters
 To execute an action, the agent first computes the absolute pose with component-wise addition between the relative action $\mathbf{a}$ and the preserved, true context $\mathbf{x}$. Once the absolute pose is determined, the agent uses an inverse kinematics \parencite{IK} solver to compute a feasible joint configuration for the target pose. If a valid solution exists, a motion planner generates a trajectory that moves the manipulator from its starting state to the desired grasping position. If no valid solution is found, the action is considered infeasible and assigned a reward of zero.
 
 For example, the action $[0.0, 0.0, 0.0, \frac{\pi}{4}, 0.0, 0.0]$ moves the TCP to the object's centroid with matching pitch and yaw, while introducing a relative roll offset of $\frac{\pi}{4}$ radians or $45^\circ$. Figure \ref{Local Axis} illustrates the object's local axes and provides visual clarification of how each action component maps to translations and rotations about these axes. Because all components of the action are defined in the object's local frame, the same relative action can produce different absolute motions depending on the object's pose in the workspace. This introduces another element of stochasticity into the task, as the same action in the same context may lead to different results.
+\begin{figure}[h]
+\centering\includegraphics[width=0.5\textwidth]{figures/Local Axis.png}
+\caption[Local Coordinate Frame.]{Local Coordinate Frame. The yellow dot on the bottle represents its centroid, while the red, green, and blue axes indicate the positive directions of the object's local $x$, $y$, and $z$ axes, respectively. An action containing a $+\Delta l$ component would produce a translation along the red axis, starting from the yellow dot.}
+\label{Local Axis}
+\end{figure}
 
 To ensure that the robot only attempts potentially successful grasps, each component of the relative action $\mathbf{a}$ has the following bounds
 \[
@@ -220,48 +241,72 @@ To ensure that the robot only attempts potentially successful grasps, each compo
 \end{gathered}
 \]
 These bounds not only prevent the agent from proposing actions that will never lead to success, but they also shrink the action space significantly. In addition to these restrictions on the relative actions, the computed absolute pose is also clamped to the same bounds defined for the context (Section \ref{Context Definition}).
-\begin{figure}[h]
-\centering\includegraphics[width=0.5\textwidth]{figures/Local Axis.png}
-\caption[Local Coordinate Frame.]{Local Coordinate Frame. The yellow dot on the bottle represents its centroid, while the red, green, and blue axes indicate the positive directions of the object's local $x$, $y$, and $z$ axes, respectively. An action containing a $+\Delta l$ component would produce a translation along the red axis, starting from the yellow dot.}
-\label{Local Axis}
-\end{figure}
 
 \subsection{Reward Definition}
-Rewards are assigned autonomously to each action executed in the workspace. The reward is binary: actions that result in a successful grasp receive a reward of 1, while unsuccessful actions receive a reward of 0. Action success is determined using two criteria: a reduction in the total workspace items, and the measured current load of the gripper. If the number of items in the workspace decreases by one following the action and gripper current exceeds 150 mA, the action is classified as successful and assigned a reward of 1. Otherwise, the action is classified as a failure and assigned a reward of 0. This dual-condition check ensures that grasp attempts that fail to grab the object are not incorrectly labeled as successful.
+Rewards are assigned autonomously to each action executed in the workspace. The reward is binary: actions that result in a successful grasp receive a reward of $1$, while unsuccessful actions receive a reward of $0$. Action success is determined using two criteria: a reduction in the total workspace items, and the measured current load of the gripper. If the number of items in the workspace decreases by one following the action and the gripper current exceeds $150$ mA, the action is classified as successful and assigned a reward of $1$. Otherwise, the action is classified as a failure and assigned a reward of $0$. This dual-condition check ensures that grasp attempts that fail to grab the object are not incorrectly labeled as successful.
 
 A binary reward setup is effective for evaluating the method because multiple actions can yield successful grasps and achieve the maximum reward. However, many of these actions are suboptimal due to inherent uncertainty in the workspace and the grasping process. Rather than optimizing for any action that simply achieves success, the modified objective encourages convergence towards actions that are more optimal and robust to uncertainty. These optimal actions are often located near the center of regions with consistently high rewards. Converging to these regions improves overall performance and helps avoid policies that settle in local optima or rely on highly situational actions.
 
 \subsection{Neural Network Architectures}
 \label{sec:nn_arc}
-Each approximate reward model in the ensemble is a fully connected Multi-Layer Perceptron (MLP). Each network has two hidden layers consisting of 256 units, followed by Rectified Linear Unit (ReLU) activations. The model takes the concatenated context and action and outputs a scalar value representing the predicted expected reward. The policy network is also a fully connected MLP with two hidden layers of 256 units. However, it uses Gaussian Error Linear Unit (GELU) activations after each hidden layer. The policy is initialized with Xavier weight initialization to produce larger variance in the network at first. Because the policy maps contexts to actions, a hyperbolic tangent (tanh) activation is applied to the final layer to bound the outputs within a normalized action range.
+Each approximate reward model in the ensemble is a fully connected Multi-Layer Perceptron (MLP). Each network has two hidden layers consisting of $256$ units, followed by Rectified Linear Unit (ReLU) activations. The model takes the concatenated context and action and outputs a scalar value representing the predicted expected reward. The policy network is also a fully connected MLP with two hidden layers of $256$ units. However, it uses Gaussian Error Linear Unit (GELU) activations after each hidden layer. The policy is initialized with Xavier weight initialization to produce larger variance in the network at first. Because the policy maps contexts to actions, a hyperbolic tangent (tanh) activation is applied to the final layer to bound the outputs within a normalized action range.
 
-\section{Experimental Results}
-\subsection{Objective Comparison in Buffalo Gym Simulation}
-We first analyzed the different optimization objectives in the Buffalo Gym environment. The true reward function was used during optimization to evaluate each objective, with five different reward functions, each using five identical initialization seeds. 
-% The PAR objective was trained with $\alpha$ values of $0.0, 0.35, 0.5, 0.65,$ and $1.0$. The A2P objective was trained with a momentum factor of $0.5$ and a learning rate for $\epsilon$ of $0.10$. The NRMDP objective was trained with a fixed $\epsilon$ value of $0.10$.
-After convergence, each policy was evaluated based on the true achieved reward and the average reward under three types of action noise: Gaussian noise with standard deviations equal to $\frac{1}{3}$ and $\frac{2}{3}$ of the maximum perturbation $\delta_\text{max}$, and uniformly random noise within the noise interval. The results for Function 1 (blue curve in Fig.~\ref{fig:plot2}) are shown in Table \ref{tab:obj_comp1}; complete results are in Appendix \ref{sec:obj_comp_full}. As expected, the standard RL objective achieves the highest reward in the absence of perturbations. However, the PAR objective demonstrates superior performance under action noise. The optimal value of $\alpha$ depends on the magnitude of the noise, with larger perturbations favoring higher values of $\alpha$. This behavior is intuitive, as noisier scenarios require more robust actions.
+\section{Baselines}
+\label{sec:baselines}
+In order to evaluate the proposed PAR objective, two robust RL baselines were implemented. Much like the PAR objective, these baselines focus on robustness to continuous action perturbations, making them a useful comparison. Although these methods were designed for MDPs or stochastic policies, the objectives of these methods were adapted for the approach in this paper. The two baselines are as follows:
+\begin{itemize}
+    \item \textbf{Noisy Action Robust MDP (NRMDP):} The NRMDP \parencite{RobustActionMDP} method introduces a mixed policy $\pi_\text{mix}$ which combines the agent's policy $\pi$ and the adversary's policy $\bar{\pi}$ such that 
+    \[
+    a_t\sim\pi_\text{mix}\big(\pi(s_t), \bar{\pi}(s_t)\big).
+    \]
+    The mixed policy is defined as
+    \[
+    \pi_\text{mix}(a|s) = \mathbb{E}_{b\sim\pi(\cdot|s), \ \bar{b}\sim\bar{\pi}(\cdot|s)}
+    \Big[\mathds{1}_{a=(1-\epsilon)b+\epsilon\bar{b}}\Big],
+    \]
+    where $\epsilon$ (denoted $\alpha$ in the original paper) is the adversarial coefficient. The corresponding optimization objective is
+    \[
+    \pi_{\text{mix}}^{\star} =
+    \arg\max_\pi\min_{\bar{\pi}}\mathbb{E}_{a_t\sim\pi_\text{mix}}
+    \Big[\sum_{t=0}^{\infty} \gamma^t R(s_t,a_t)\Big]
+    \]
+    In all experiments, the adversarial coefficient $\epsilon$ was fixed to a value of $0.10$.
 
-The results for the remaining functions $(2 ,3 ,4 ,5)$ are shown in Tables \ref{tab:obj_comp2}, \ref{tab:obj_comp3}, \ref{tab:obj_comp4}, and \ref{tab:obj_comp5}. A convergence example for each function is shown in Figure \ref{fig:convergences}.
+    \item \textbf{Adaptive Action Perturbation MDP (A$\mathbf{2}$P):} The A$2$P \parencite{A2P} method extends the NRMDP by making the adversarial coefficient $\epsilon$ adaptive. At each iteration, the Eucledian distance between the agent and adversarial actions is computed as $d$. A moving average of the distance is maintained with the following: 
+    \[
+    d_j=\zeta \cdot d_{j-1}+(1-\zeta)\cdot d,
+    \]
+    where $\zeta$ (denoted $\beta$ in the original paper) is the momentum factor. They then define a metric (unnamed) as
+    \[
+    b=sgn(d_{j-1}-d)\sigma(|d_{j-1}-d|).
+    \]
+    Finally, the adversarial coefficient $\epsilon$ is updated by
+    \[
+    \epsilon_{j}=\epsilon_{j-1}+c\cdot b,
+    \]
+    where $c$ is the learning rate for $\epsilon$. By adapting the adversarial coefficient, the method adjusts the strength of the adversarial perturbation to match the environment. In all experiments, the A$2$P objective was trained with a momentum factor $\zeta$ of $0.50$ and an adversarial learning rate $c$ of $0.10$.
+\end{itemize}
+
+\section{Experiments and Results}
+\label{sec:exps_and_results}
+This section describes the evaluations of the proposed method across the simulation and physical settings and presents the corresponding results. First, the behavior of the different optimization objectives is analyzed in the Buffalo Gym environment, focusing on performance under different noise types. Then, a sensitivity analysis on the uncertainty coefficient $\beta$ is conducted, also in the Buffalo Gym environment, to assess the stability of the approach. And finally, the different optimization objectives are evaluated on the robotic manipulation task, highlighting their effectiveness in a real-world grasping scenario. The experiments demonstrate that the proposed objective is effective and consistently outperforms other robust RL baseline methods.
+
+\subsection{Objective Comparison in Simulation}
+First, the different optimization objectives were analyzed in the Buffalo Gym environment. Instead of optimizing with an approximate reward model as described in the proposed framework, the Buffalo Gym functions were treated as the true deterministic reward functions during these experiments, allowing the behavior of each objective to be evaluated. Optimization was performed on the five predefined reward functions (Figure \ref{fig:functions}), with five different initialization seeds per function. After convergence, each policy was evaluated based on the true achieved reward and the average reward under three types of action noise: Gaussian noise with standard deviations equal to $\frac{1}{3}$ and $\frac{2}{3}$ of the maximum perturbation $\delta_\text{max}$, and uniformly random noise within the noise interval. The results for each function across the five seeds are shown in Tables \ref{tab:obj_comp1}, \ref{tab:obj_comp2}, \ref{tab:obj_comp3}, \ref{tab:obj_comp4}, and \ref{tab:obj_comp5}. Additionally, a convergence example for each function is shown in Figure \ref{fig:convergences}.
+
+As expected, the standard RL objective $(\alpha=0.0)$ achieves the highest reward in the absence of perturbations across all five functions. Because this objective solely maximizes reward, it naturally converges to actions at the reward maxima. However, the PAR objective demonstrates superior performance under action noise in every scenario except for two (see Tables \ref{tab:obj_comp3} and \ref{tab:obj_comp4}). This is a result of the performance/robustness tradeoff of the PAR objective, where the resulting actions are high reward and resilient to action perturbations. The optimal value of $\alpha$ depends on the magnitude of the noise, with larger perturbations favoring higher values of $\alpha$. This behavior is intuitive, as noisier scenarios require more robust actions. Both A$2$P and NRMDP show weaker robustness performance in nearly all scenarios when compared to the PAR objective. Since they are optimized with respect to adversarial noise in one direction, the resulting actions may be sensitive to noise in the opposite direction.
 \begin{table}[H]
-
 \centering
-\caption[Objective Comparison for Function 1]{Objective Comparison with True Reward for Function 1.}
+\caption[Objective Comparison Results for Function $1$.]{Objective Comparison Results for Function $1$.}
 \label{tab:obj_comp1}
-\begin{tabular}{lcccc}
-\noalign{
-  \tagmcbegin{artifact}
-  \hrule height 1.0pt
-  \vspace{3pt}
-  \tagmcend{}
+\centering
+\begin{tblr}{
+  colspec = {lcccc},
+  width = \textwidth,
+  hline{1,Z} = {1pt},
+  hline{2} = {0.7pt}
 }
 Objective & Reward ($\sigma = 0$) & $\sigma = \delta_{\text{max}}/3$ & $\sigma = 2\delta_{\text{max}}/3$ & Random \\
-\noalign{
-  \tagmcbegin{artifact}
-  \vspace{3pt}
-  \hrule height 0.7pt
-  \vspace{3pt}
-  \tagmcend{}
-}
 Standard ($\alpha=0.0$) & $\mathbf{0.7867 \pm 0.00}$ & $0.6794 \pm 0.00$ & $0.6240 \pm 0.00$ & $0.5641 \pm 0.00$ \\
 PAR ($\alpha=0.35$) & $0.7807 \pm 0.00$ & $0.6887 \pm 0.00$ & $0.6395 \pm 0.00$ & $0.5884 \pm 0.00$ \\
 PAR ($\alpha=0.50$) & $0.7640 \pm 0.00$ & $\mathbf{0.6943 \pm 0.00}$ & $0.6526 \pm 0.00$ & $0.6101 \pm 0.00$ \\
@@ -269,33 +314,19 @@ PAR ($\alpha=0.65$) & $0.6919 \pm 0.00$ & $0.6931 \pm 0.00$ & $0.6776 \pm 0.00$ 
 PAR ($\alpha=1.0$) & $0.6207 \pm 0.00$ & $0.6853 \pm 0.00$ & $\mathbf{0.6888 \pm 0.00}$ & $\mathbf{0.6984 \pm 0.00}$ \\
 A$2$P & $0.7820 \pm 0.00$ & $0.6795 \pm 0.01$ & $0.6258 \pm 0.01$ & $0.5679 \pm 0.02$ \\
 NRMDP & $0.7743 \pm 0.01$ & $0.6650 \pm 0.02$ & $0.6081 \pm 0.02$ & $0.5461 \pm 0.03$ \\
-\noalign{
-  \tagmcbegin{artifact}
-  \vspace{3pt}
-  \hrule height 1.0pt
-  \tagmcend{}
-}
-\end{tabular}
+\end{tblr}
 
 \end{table}
 \begin{table}[H]
 
 \centering
-\begin{tabular}{lcccc}
-\noalign{
-  \tagmcbegin{artifact}
-  \hrule height 1.0pt
-  \vspace{3pt}
-  \tagmcend{}
+\begin{tblr}{
+  colspec = {lcccc},
+  width = \textwidth,
+  hline{1,Z} = {1pt},
+  hline{2} = {0.7pt}
 }
-Objective & Reward & $\sigma=\delta_\text{max}/3$ & $\sigma=2\delta_\text{max}/3$ & Random \\
-\noalign{
-  \tagmcbegin{artifact}
-  \vspace{3pt}
-  \hrule height 0.7pt
-  \vspace{3pt}
-  \tagmcend{}
-}
+Objective & Reward ($\sigma = 0$) & $\sigma = \delta_{\text{max}}/3$ & $\sigma = 2\delta_{\text{max}}/3$ & Random \\
 Standard ($\alpha=0.0$) & $\mathbf{0.5486 \pm 0.05}$ & $0.4639 \pm 0.04$ & $0.4408 \pm 0.06$ & $0.4255 \pm 0.08$ \\
 PAR ($\alpha=0.35$) & $0.5030 \pm 0.00$ & $0.5039 \pm 0.00$ & $\mathbf{0.5067 \pm 0.00}$ & $\mathbf{0.5176 \pm 0.00}$ \\
 PAR ($\alpha=0.50$) & $0.4967 \pm 0.00$ & $0.5054 \pm 0.00$ & $0.4966 \pm 0.00$ & $0.5004 \pm 0.00$ \\
@@ -303,35 +334,21 @@ PAR ($\alpha=0.65$) & $0.4950 \pm 0.00$ & $\mathbf{0.5062 \pm 0.00}$ & $0.4957 \
 PAR ($\alpha=1.0$) & $0.4970 \pm 0.00$ & $0.5035 \pm 0.00$ & $0.4976 \pm 0.00$ & $0.4926 \pm 0.01$ \\
 A$2$P & $0.5422 \pm 0.05$ & $0.4509 \pm 0.05$ & $0.4291 \pm 0.08$ & $0.4171 \pm 0.09$ \\
 NRMDP & $0.3088 \pm 0.24$ & $0.4002 \pm 0.12$ & $0.3953 \pm 0.12$ & $0.3972 \pm 0.11$ \\
-\noalign{
-  \tagmcbegin{artifact}
-  \vspace{3pt}
-  \hrule height 1.0pt
-  \tagmcend{}
-}
-\end{tabular}
-\caption[Objective Comparison for Function 2]{Objective Comparison with True Reward for Function 2}
+\end{tblr}
+\caption[Objective Comparison Results for Function $2$.]{Objective Comparison Results for Function $2$.}
 \label{tab:obj_comp2}
 
 \end{table}
 \begin{table}[H]
 
 \centering
-\begin{tabular}{lcccc}
-\noalign{
-  \tagmcbegin{artifact}
-  \hrule height 1.0pt
-  \vspace{3pt}
-  \tagmcend{}
+\begin{tblr}{
+  colspec = {lcccc},
+  width = \textwidth,
+  hline{1,Z} = {1pt},
+  hline{2} = {0.7pt}
 }
-Objective & Reward & $\sigma=\delta_\text{max}/3$ & $\sigma=2\delta_\text{max}/3$ & Random \\
-\noalign{
-  \tagmcbegin{artifact}
-  \vspace{3pt}
-  \hrule height 0.7pt
-  \vspace{3pt}
-  \tagmcend{}
-}
+Objective & Reward ($\sigma = 0$) & $\sigma = \delta_{\text{max}}/3$ & $\sigma = 2\delta_{\text{max}}/3$ & Random \\
 Standard ($\alpha=0.0$) & $\mathbf{0.5411 \pm 0.00}$ & $0.4779 \pm 0.03$ & $0.4565 \pm 0.05$ & $0.4464 \pm 0.07$ \\
 PAR ($\alpha=0.35$) & $0.5406 \pm 0.00$ & $0.4983 \pm 0.00$ & $0.4955 \pm 0.00$ & $0.5013 \pm 0.00$ \\
 PAR ($\alpha=0.50$) & $0.5396 \pm 0.00$ & $0.4982 \pm 0.00$ & $0.4956 \pm 0.00$ & $\mathbf{0.5014 \pm 0.00}$ \\
@@ -339,35 +356,21 @@ PAR ($\alpha=0.65$) & $0.5360 \pm 0.01$ & $0.4979 \pm 0.00$ & $0.4957 \pm 0.00$ 
 PAR ($\alpha=1.0$) & $0.4536 \pm 0.00$ & $0.4937 \pm 0.00$ & $\mathbf{0.4964 \pm 0.00}$ & $0.4916 \pm 0.00$ \\
 A$2$P & $0.5381 \pm 0.00$ & $\mathbf{0.4985 \pm 0.00}$ & $0.4946 \pm 0.00$ & $0.4993 \pm 0.00$ \\
 NRMDP & $0.5386 \pm 0.00$ & $0.4984 \pm 0.00$ & $0.4950 \pm 0.00$ & $0.5001 \pm 0.00$ \\
-\noalign{
-  \tagmcbegin{artifact}
-  \vspace{3pt}
-  \hrule height 1.0pt
-  \tagmcend{}
-}
-\end{tabular}
-\caption[Objective Comparison for Function 3]{Objective Comparison with True Reward for Function 3}
+\end{tblr}
+\caption[Objective Comparison Results for Function $3$.]{Objective Comparison Results for Function $3$.}
 \label{tab:obj_comp3}
 
 \end{table}
 \begin{table}[H]
 
 \centering
-\begin{tabular}{lcccc}
-\noalign{
-  \tagmcbegin{artifact}
-  \hrule height 1.0pt
-  \vspace{3pt}
-  \tagmcend{}
+\begin{tblr}{
+  colspec = {lcccc},
+  width = \textwidth,
+  hline{1,Z} = {1pt},
+  hline{2} = {0.7pt}
 }
-Objective & Reward & $\sigma=\delta_\text{max}/3$ & $\sigma=2\delta_\text{max}/3$ & Random \\
-\noalign{
-  \tagmcbegin{artifact}
-  \vspace{3pt}
-  \hrule height 0.7pt
-  \vspace{3pt}
-  \tagmcend{}
-}
+Objective & Reward ($\sigma = 0$) & $\sigma = \delta_{\text{max}}/3$ & $\sigma = 2\delta_{\text{max}}/3$ & Random \\
 Standard ($\alpha=0.0$) & $\mathbf{0.5560 \pm 0.07}$ & $\mathbf{0.4826 \pm 0.01}$ & $0.4465 \pm 0.05$ & $0.4194 \pm 0.07$ \\
 PAR ($\alpha=0.35$) & $0.5526 \pm 0.07$ & $0.4794 \pm 0.01$ & $0.4440 \pm 0.04$ & $0.4174 \pm 0.07$ \\
 PAR ($\alpha=0.50$) & $0.5495 \pm 0.07$ & $0.4767 \pm 0.01$ & $0.4417 \pm 0.04$ & $0.4153 \pm 0.07$ \\
@@ -375,35 +378,21 @@ PAR ($\alpha=0.65$) & $0.5462 \pm 0.08$ & $0.4743 \pm 0.01$ & $0.4396 \pm 0.04$ 
 PAR ($\alpha=1.0$) & $0.4741 \pm 0.00$ & $0.4667 \pm 0.00$ & $\mathbf{0.4620 \pm 0.00}$ & $\mathbf{0.4585 \pm 0.00}$ \\
 A$2$P & $0.5016 \pm 0.01$ & $0.4745 \pm 0.03$ & $0.4569 \pm 0.05$ & $0.4418 \pm 0.07$ \\
 NRMDP & $0.4603 \pm 0.08$ & $0.4561 \pm 0.07$ & $0.4465 \pm 0.07$ & $0.4380 \pm 0.08$ \\
-\noalign{
-  \tagmcbegin{artifact}
-  \vspace{3pt}
-  \hrule height 1.0pt
-  \tagmcend{}
-}
-\end{tabular}
-\caption[Objective Comparison for Function 4]{Objective Comparison with True Reward for Function 4}
+\end{tblr}
+\caption[Objective Comparison Results for Function $4$.]{Objective Comparison Results for Function $4$.}
 \label{tab:obj_comp4}
 
 \end{table}
 \begin{table}[H]
 
 \centering
-\begin{tabular}{lcccc}
-\noalign{
-  \tagmcbegin{artifact}
-  \hrule height 1.0pt
-  \vspace{3pt}
-  \tagmcend{}
+\begin{tblr}{
+  colspec = {lcc},
+  width = \textwidth,
+  hline{1,Z} = {1pt},
+  hline{2} = {0.7pt}
 }
-Objective & Reward & $\sigma=\delta_\text{max}/3$ & $\sigma=2\delta_\text{max}/3$ & Random \\
-\noalign{
-  \tagmcbegin{artifact}
-  \vspace{3pt}
-  \hrule height 0.7pt
-  \vspace{3pt}
-  \tagmcend{}
-}
+Objective & Reward ($\sigma = 0$) & $\sigma = \delta_{\text{max}}/3$ & $\sigma = 2\delta_{\text{max}}/3$ & Random \\
 Standard ($\alpha=0.0$) & $\mathbf{0.4552 \pm 0.03}$ & $0.4047 \pm 0.02$ & $0.3888 \pm 0.03$ & $0.3728 \pm 0.04$ \\
 PAR ($\alpha=0.35$) & $0.4546 \pm 0.03$ & $0.4066 \pm 0.02$ & $0.3908 \pm 0.02$ & $0.3748 \pm 0.04$ \\
 PAR ($\alpha=0.50$) & $0.4529 \pm 0.03$ & $0.4083 \pm 0.02$ & $0.3927 \pm 0.02$ & $0.3769 \pm 0.04$ \\
@@ -411,19 +400,13 @@ PAR ($\alpha=0.65$) & $0.4442 \pm 0.03$ & $\mathbf{0.4119 \pm 0.01}$ & $0.4045 \
 PAR ($\alpha=1.0$) & $0.3994 \pm 0.00$ & $0.3984 \pm 0.00$ & $\mathbf{0.4062 \pm 0.00}$ & $\mathbf{0.4163 \pm 0.00}$ \\
 A$2$P & $0.4514 \pm 0.03$ & $0.4027 \pm 0.02$ & $0.3875 \pm 0.03$ & $0.3719 \pm 0.04$ \\
 NRMDP & $0.4449 \pm 0.03$ & $0.3958 \pm 0.03$ & $0.3813 \pm 0.04$ & $0.3663 \pm 0.05$ \\
-\noalign{
-  \tagmcbegin{artifact}
-  \vspace{3pt}
-  \hrule height 1.0pt
-  \tagmcend{}
-}
-\end{tabular}
-\caption[Objective Comparison for Function 5]{Objective Comparison with True Reward for Function 5}
+\end{tblr}
+\caption[Objective Comparison Results for Function $5$.]{Objective Comparison Results for Function $5$.}
 \label{tab:obj_comp5}
 
 \end{table}
 
-\begin{figure}[!htbp]
+\begin{figure}[H]
     \centering
     \begin{minipage}[c]{0.485\textwidth}
         \centering
@@ -457,52 +440,35 @@ NRMDP & $0.4449 \pm 0.03$ & $0.3958 \pm 0.03$ & $0.3813 \pm 0.04$ & $0.3663 \pm 
         \subcaption{}
         \label{fig:conv5}
     \end{minipage}
-    \caption{Convergence Examples from Objective Comparison.}
+    \caption[Convergence Examples from Objective Comparison.]{Convergence Examples from Objective Comparison. Each figure above represents a single-seed example of each objectives' resulting action plotted on the true reward function for each of the five Buffalo Gym functions.}
     \label{fig:convergences}
 \end{figure}
 
-\vspace{-0.25in}
-\subsection{Sensitivity Analysis in Buffalo Gym Simulation}
-Next, we performed a sensitivity analysis on the uncertainty coefficient $\beta$ (Eq.~\ref{Penalized Reward}). We generated $300$ random samples from the expected reward function defined in the Buffalo Gym environment and trained an ensemble of $5$ approximate reward models $(N=5)$. To encourage diversity in the ensemble, gaps were introduced into the sampling distribution. Policies were then trained using different $\beta$ values, with each policy using the PAR objective with $\alpha=0.5$. After training, we evaluated the converged policies using the true reward function to measure the actual achieved reward. The analysis was performed on three reward functions with three randomization seeds. The results for the first function across the three seeds are shown in Table \ref{tab:sens_ana}, while the results for one representative seed are shown in Fig.~\ref{fig:plot2}. Overall, varying $\beta$ influences policy behavior, but only modest changes in performance are observed. The complete results are shown in Appendix \ref{sec:sens_ana_full}.
+\subsection{Sensitivity Analysis in Simulation}
+Next, a sensitivity analysis on the uncertainty coefficient $\beta$ from Equation \ref{Penalized Reward} was performed in the Buffalo Gym environment. In these experiments, the Buffalo Gym functions were interpreted as stochastic reward functions, and binary rewards were sampled based on the returned reward probability. After generating $300$ random samples from the reward function, an ensemble of $5$ approximate reward models $(N=5)$ was trained. To encourage diversity in the ensemble, gaps were introduced into the sampling distribution. Policies were then trained using different values of $\beta$, with each policy using the PAR objective with $\alpha=0.5$. After training, the converged policies were evaluated using the true expected reward function to measure the actual achieved performance. The analysis was performed on three reward functions with three randomization seeds each. The results for each function across the three seeds are shown in Tables \ref{tab:sens_ana}, \ref{tab:sens_ana4}, and \ref{tab:sens_ana5}. An example of the resulting reward models with varying values of $\beta$ for each function is shown in Figures \ref{fig:beta_1}, \ref{fig:beta_4}, and \ref{fig:beta_5}. 
 
-The results for the remaining functions $(4\text{ and }5)$  are shown in Tables \ref{tab:sens_ana2} and \ref{tab:sens_ana5}. An example of the resulting reward models for each function is shown in Figure \ref{fig:beta_tests}.
-
+In all three scenarios, the true achieved reward remains relatively stable across a broad range of $\beta$ values, indicating that the method is not sensitive to the uncertainty coefficient. However, when $\beta$ is less than $2.0$, the approximate reward consistently overestimates the true reward, which can lead to errors in the converged policy. Depending on the desired conservativeness of the reward model, it seems best to choose values of $\beta$ greater than or equal to $2.0$.
 \begin{figure}[H]
     \centering
     \begin{minipage}[c]{0.48\linewidth}
         \centering
         \begin{table}[H]
         \centering
-        \begin{tabular}{lcc}
-        \noalign{
-        \tagmcbegin{artifact}
-        \hrule height 1.0pt
-        \vspace{3pt}
-        \tagmcend{}
+        \begin{tblr}{
+        colspec = {lcc},
+        width = \textwidth,
+        hline{1,Z} = {1pt},
+        hline{2} = {0.7pt}
         }
         $\beta$ & True Reward & Approx. Reward \\
-        \noalign{
-        \tagmcbegin{artifact}
-        \vspace{3pt}
-        \hrule height 0.7pt
-        \vspace{3pt}
-        \tagmcend{}
-        }
         $0.0$ & $0.6814 \pm 0.04$ & $0.7560 \pm 0.06$ \\
         $1.0$ & $0.7055 \pm 0.06$ & $0.7217 \pm 0.04$ \\
         $2.0$ & $\mathbf{0.7137 \pm 0.07}$ & $0.6957 \pm 0.04$ \\
         $3.0$ & $0.6767 \pm 0.05$ & $0.6150 \pm 0.06$ \\
         $4.0$ & $0.6720 \pm 0.05$ & $0.5909 \pm 0.06$ \\
         $5.0$ & $0.6690 \pm 0.05$ & $0.5692 \pm 0.07$ \\
-        \noalign{
-        \tagmcbegin{artifact}
-        \vspace{3pt}
-        \hrule height 1.0pt
-        \tagmcend{}
-        }
-        \end{tabular}
-        \captionof{table}[$\beta$ Sensitivity Analysis Results for Function 1.]{$\beta$ Sensitivity Analysis Results for Function 1. 
-        % The approximated reward does not overestimate the true reward (achieved by the trained policies) for higher $\beta$.
+        \end{tblr}
+        \captionof{table}[Function $1$ Sensitivity Analysis Results.]{Function $1$ Sensitivity Analysis Results.
         }
         \label{tab:sens_ana}
         \end{table}
@@ -510,9 +476,9 @@ The results for the remaining functions $(4\text{ and }5)$  are shown in Tables 
     \hfill
     \begin{minipage}[c]{0.48\linewidth}
         \centering
-        \includegraphics[width=\linewidth]{figures/offline_plot.png}
-        \caption[$\beta$ Sensitivity Analysis Results for Function 1.]{$\beta$ Sensitivity Analysis Results for Function 1.}
-        \label{fig:plot2}
+        \includegraphics[width=\linewidth]{figures/Beta/1.png}
+        \caption[Function $1$ Sensitivity Analysis.]{Function $1$ Sensitivity Analysis.}
+        \label{fig:beta_1}
     \end{minipage}
 \end{figure}
 
@@ -522,35 +488,21 @@ The results for the remaining functions $(4\text{ and }5)$  are shown in Tables 
         \centering
         \begin{table}[H]
         \centering
-        \begin{tabular}{lcc}
-        \noalign{
-        \tagmcbegin{artifact}
-        \hrule height 1.0pt
-        \vspace{3pt}
-        \tagmcend{}
+        \begin{tblr}{
+        colspec = {lcc},
+        width = \textwidth,
+        hline{1,Z} = {1pt},
+        hline{2} = {0.7pt}
         }
-        $\beta$ & True Reward & Approx. Reward \\
-        \noalign{
-        \tagmcbegin{artifact}
-        \vspace{3pt}
-        \hrule height 0.7pt
-        \vspace{3pt}
-        \tagmcend{}
-        }
+        $\mathbf{\beta}$ & True Reward & Approx. Reward \\
         $0.0$ & $0.4953 \pm 0.01$ & $0.5084 \pm 0.04$ \\
         $1.0$ & $0.4960 \pm 0.01$ & $0.4973 \pm 0.03$ \\
         $2.0$ & $0.4962 \pm 0.00$ & $0.4867 \pm 0.03$ \\
         $3.0$ & $0.4965 \pm 0.00$ & $0.4759 \pm 0.02$ \\
         $4.0$ & $\mathbf{0.4966 \pm 0.00}$ & $0.4655 \pm 0.02$ \\
         $5.0$ & $0.4965 \pm 0.00$ & $0.4551 \pm 0.01$ \\
-        \noalign{
-        \tagmcbegin{artifact}
-        \vspace{3pt}
-        \hrule height 1.0pt
-        \tagmcend{}
-        }
-        \end{tabular}
-        \captionof{table}[$\beta$ Sensitivity Analysis Results for Function 4.]{$\beta$ Sensitivity Analysis Results for Function 4.}
+        \end{tblr}
+        \captionof{table}[Function $4$ Sensitivity Analysis Results.]{Function $4$ Sensitivity Analysis Results.}
         \label{tab:sens_ana4}
         \end{table}
     \end{minipage}
@@ -558,8 +510,8 @@ The results for the remaining functions $(4\text{ and }5)$  are shown in Tables 
     \begin{minipage}[c]{0.48\linewidth}
         \centering
         \includegraphics[width=\linewidth]{figures/Beta/4.png}
-        \caption[$\beta$ Sensitivity Analysis Example for Function 4.]{$\beta$ Sensitivity Analysis Example for Function 4.}
-        \label{fig:plot2}
+        \caption[Function $4$ Sensitivity Analysis.]{Function $4$ Sensitivity Analysis.}
+        \label{fig:beta_4}
     \end{minipage}
 \end{figure}
 
@@ -569,35 +521,21 @@ The results for the remaining functions $(4\text{ and }5)$  are shown in Tables 
         \centering
         \begin{table}[H]
         \centering
-        \begin{tabular}{lcc}
-        \noalign{
-        \tagmcbegin{artifact}
-        \hrule height 1.0pt
-        \vspace{3pt}
-        \tagmcend{}
+        \begin{tblr}{
+        colspec = {lcc},
+        width = \textwidth,
+        hline{1,Z} = {1pt},
+        hline{2} = {0.7pt}
         }
-        $\beta$ & True Reward & Approx. Reward \\
-        \noalign{
-        \tagmcbegin{artifact}
-        \vspace{3pt}
-        \hrule height 0.7pt
-        \vspace{3pt}
-        \tagmcend{}
-        }
+        $\mathbf{\beta}$ & True Reward & Approx. Reward \\
         $0.0$ & $\mathbf{0.4259 \pm 0.03}$ & $0.4587 \pm 0.08$ \\
         $1.0$ & $0.4255 \pm 0.03$ & $0.4416 \pm 0.08$ \\
         $2.0$ & $0.4144 \pm 0.03$ & $0.4188 \pm 0.08$ \\
         $3.0$ & $0.4129 \pm 0.02$ & $0.4111 \pm 0.06$ \\
         $4.0$ & $0.4187 \pm 0.02$ & $0.3683 \pm 0.03$ \\
         $5.0$ & $0.4222 \pm 0.02$ & $0.3561 \pm 0.03$ \\
-        \noalign{
-        \tagmcbegin{artifact}
-        \vspace{3pt}
-        \hrule height 1.0pt
-        \tagmcend{}
-        }
-        \end{tabular}
-        \captionof{table}[$\beta$ Sensitivity Analysis Results for Function 5.]{$\beta$ Sensitivity Analysis Results for Function 5.}
+        \end{tblr}
+        \captionof{table}[Function $5$ Sensitivity Analysis Results.]{Function $5$ Sensitivity Analysis Results.}
         \label{tab:sens_ana5}
         \end{table}
     \end{minipage}
@@ -605,23 +543,30 @@ The results for the remaining functions $(4\text{ and }5)$  are shown in Tables 
     \begin{minipage}[c]{0.48\linewidth}
         \centering
         \includegraphics[width=\linewidth]{figures/Beta/5.png}
-        \caption[$\beta$ Sensitivity Analysis Example for Function 5.]{$\beta$ Sensitivity Analysis Example for Function 5.}
-        \label{fig:plot2}
+        \caption[Function $5$ Sensitivity Analysis.]{Function $5$ Sensitivity Analysis.}
+        \label{fig:beta_5}
     \end{minipage}
 \end{figure}
 
+\subsection{Objective Comparison on Robotic Task}
+Finally, the different objectives were evaluated on the physical sorting task described in Section \ref{sec:phys_setup}, in which a robotic manipulator has to grasp and sort recyclable objects. An initial dataset consisting of $160$ expert and $340$ random demonstrations was first collected. The expert demonstrations were generated by hand-guiding the KUKA collaborative robot to a variety of feasible grasp poses for the assigned object, while the random demonstrations were generated using an exploration policy that sampled actions uniformly within the action bounds. An expected reward ensemble consisting of $5$ networks ($N=5$) was then trained on the initial dataset. The same expected reward model was subsequently used to train each objective across $8$ initialization seeds with $\beta=2.0$. The learned policies were evaluated on $3$ workspace configurations containing a total of $5$ bottles and $5$ cans. For every policy, $10$ grasps were executed on the $3$ workspace configurations without action perturbations, followed by $10$ grasps with adversarial action perturbations of $\pm2$ cm in each translational direction and $\pm6^\circ$ in each rotational direction. Across the $8$ initialization seeds, this amounts to $80$ grasp attempts without noise and $80$ grasp attempts with perturbations for each objective, resulting in a total of $800$ grasp attempts across the entire experiment.
+The grasp success rates across all seeds are shown in Table \ref{tab:grasp_success_rates}, while the per-seed success rates without noise, with noise, and combined are shown in Tables \ref{tab:without_noise_results} \ref{tab:with_noise_results}, and \ref{tab:overall_noise_results}.
+
 % \begin{table}[H]
 % \centering
-% \begin{minipage}[t]{0.48\textwidth}
-% \centering
-% \begin{tabular}{lcc}
+% \renewcommand{\arraystretch}{1.2}
+% \setlength{\tabcolsep}{10pt}
+% \begin{tabular}{lccc}
 % \noalign{
 % \tagmcbegin{artifact}
 % \hrule height 1.0pt
 % \vspace{3pt}
 % \tagmcend{}
 % }
-% $\beta$ & True Reward & Approx. Reward \\
+% \multirow{2}{*}{\textbf{Objective}} &
+% \multicolumn{3}{c}{\textbf{Total Success Rate}} \\
+% \cline{2-4}
+% & \textbf{Without Noise} & \textbf{With Noise} & \textbf{Overall} \\
 % \noalign{
 % \tagmcbegin{artifact}
 % \vspace{3pt}
@@ -629,47 +574,11 @@ The results for the remaining functions $(4\text{ and }5)$  are shown in Tables 
 % \vspace{3pt}
 % \tagmcend{}
 % }
-% 0.0 & 0.4953 $\pm$ 0.01 & 0.5084 $\pm$ 0.04 \\
-% 1.0 & 0.4960 $\pm$ 0.01 & 0.4973 $\pm$ 0.03 \\
-% 2.0 & 0.4962 $\pm$ 0.00 & 0.4867 $\pm$ 0.03 \\
-% 3.0 & 0.4965 $\pm$ 0.00 & 0.4759 $\pm$ 0.02 \\
-% 4.0 & $\mathbf{0.4966 \pm 0.00}$ & 0.4655 $\pm$ 0.02 \\
-% 5.0 & 0.4965 $\pm$ 0.00 & 0.4551 $\pm$ 0.01 \\
-% \noalign{
-% \tagmcbegin{artifact}
-% \vspace{3pt}
-% \hrule height 1.0pt
-% \vspace{3pt}
-% \tagmcend{}
-% }
-% \end{tabular}
-% \captionof{table}[$\beta$ 4]{Sensitivity Analysis for Function 4}
-% \label{tab:sens_ana2}
-% \end{minipage}
-% \hfill
-% \begin{minipage}[t]{0.48\textwidth}
-% \centering
-% \begin{tabular}{lcc}
-% \noalign{
-% \tagmcbegin{artifact}
-% \hrule height 1.0pt
-% \vspace{3pt}
-% \tagmcend{}
-% }
-% $\beta$ & True Reward & Approx. Reward \\
-% \noalign{
-% \tagmcbegin{artifact}
-% \vspace{3pt}
-% \hrule height 0.7pt
-% \vspace{3pt}
-% \tagmcend{}
-% }
-% 0.0 & $\mathbf{0.4259 \pm 0.03}$ & 0.4587 $\pm$ 0.08 \\
-% 1.0 & 0.4255 $\pm$ 0.03 & 0.4416 $\pm$ 0.08 \\
-% 2.0 & 0.4144 $\pm$ 0.03 & 0.4188 $\pm$ 0.08 \\
-% 3.0 & 0.4129 $\pm$ 0.02 & 0.4111 $\pm$ 0.06 \\
-% 4.0 & 0.4187 $\pm$ 0.02 & 0.3683 $\pm$ 0.03 \\
-% 5.0 & 0.4222 $\pm$ 0.02 & 0.3561 $\pm$ 0.03 \\
+% Standard ($\alpha=0$) & $70.0\% \ (56/80)$ & $31.3\% \ (25/80)$ & $50.6\% \ (81/160)$ \\ 
+% PAR ($\alpha = 0.5$) & $\mathbf{95.0\% \ (76/80)}$ & $\mathbf{75.0\% \ (60/80)}$ & $\mathbf{85.0\% \ (136/160)}$ \\ 
+% PAR ($\alpha = 1.0$) & $85.0\% \ (68/80)$ & $61.3\% \ (49/80)$ & $73.1\% \ (117/160)$ \\ 
+% A$2$P & $86.3\% \ (69/80)$ & $57.5\% \ (46/80)$ & $71.9\% \ (115/160)$ \\ 
+% NRMDP & $67.5\% \ (54/80)$ & $37.5\% \ (30/80)$ & $52.5\% \ (84/160)$ \\
 % \noalign{
 % \tagmcbegin{artifact}
 % \vspace{3pt}
@@ -677,201 +586,91 @@ The results for the remaining functions $(4\text{ and }5)$  are shown in Tables 
 % \tagmcend{}
 % }
 % \end{tabular}
-% \captionof{table}[$\beta$ 5]{Sensitivity Analysis for Function 5}
-% \label{tab:sens_ana5}
-% \end{minipage}
+% \caption[Grasp Success Rates from Robotic Sorting Task.]{Grasp Success Rates from Robotic Sorting Task.}
+% \label{tab:grasp_success_rates}
 % \end{table}
-
-% \begin{figure}[H]
-%     \centering
-%     \begin{minipage}[c]{0.485\textwidth}
-%         \centering
-%         \includegraphics[width=\textwidth]{figures/Beta/1.png}
-%         \subcaption{}
-%         \label{fig:beta1}
-%     \end{minipage}
-%     \hspace{0.01\textwidth}
-%     \begin{minipage}[c]{0.485\textwidth}
-%         \centering
-%         \includegraphics[width=\textwidth]{figures/Beta/4.png}
-%         \subcaption{}
-%         \label{fig:beta4}
-%     \end{minipage}
-%     \begin{minipage}[c]{0.485\textwidth}
-%         \includegraphics[width=\textwidth]{figures/Beta/5.png}
-%         \subcaption{}
-%         \label{fig:beta5}
-%     \end{minipage}
-%     \hspace{0.1\textwidth}
-%     \begin{minipage}[c]{0.3\textwidth}
-%         \centering
-%         \includegraphics[width=\textwidth]{figures/Beta/legend.png}
-%         \subcaption{}
-%         \label{fig:beta_legend}
-%     \end{minipage}
-%     \caption[Re tard]{Reward Ensemble Examples from Sensitivity Analysis.}
-%     \label{fig:beta_tests}
-% \end{figure}
-
-\subsection{Objective Comparison on Robotic Sorting Task}
-Finally, we conducted experiments on the physical sorting task in which a robotic manipulator has to grasp and sort recyclable objects. An initial dataset consisting of $160$ expert and $340$ random demonstrations was collected to train a reward ensemble of 5 networks ($N=5$). Each objective was then trained across 8 initialization seeds with $\beta=2.0$. The neural network architectures used to represent the reward model and policy are described in Appendix \ref{sec:nn_arc}. The resulting policies were evaluated on $3$ workspace configurations containing $10$ items total. For every policy, we executed $10$ grasps without noise, and 10 grasps with adversarial action perturbations of $\pm2$ cm for each translational direction and $\pm6^\circ$ for each rotational direction. This results in $80$ grasps with and without noise for each policy, and a total of $800$ grasp attempts across all experiments. The grasp success rates across all seeds are shown in Table \ref{tab:grasp_success_rates}, with the per-seed results provided in Appendix \ref{sec:robotic_results}. A grasp attempt and its corresponding trajectory are shown in Fig.~\ref{fig:trajectory}. The PAR objective with $\alpha=0.5$ achieved the best performance, with and without action noise. This is due to the trade off of performance and robustness with this objective, leading to high reward actions in high reward regions. The fact that standard RL fails to achieve the highest success rate even in the noiseless setting suggests that the PAR objective is less prone to reward model exploitation, as it chooses wide regions rather than pure maxima that could be misestimated.
-
-\begin{table}[t]
+\begin{table}[H]
 \centering
-\renewcommand{\arraystretch}{1.2}
-\setlength{\tabcolsep}{10pt}
-\begin{tabular}{lccc}
-\noalign{
-\tagmcbegin{artifact}
-\hrule height 1.0pt
-\vspace{3pt}
-\tagmcend{}
+\begin{tblr}{
+  colspec = {lccc},
+  width = \textwidth,
+  hline{1,Z} = {1pt},
+  hline{2,3} = {0.7pt}
 }
-\multirow{2}{*}{\textbf{Objective}} &
-\multicolumn{3}{c}{\textbf{Total Success Rate}} \\
-\cline{2-4}
-& \textbf{Without Noise} & \textbf{With Noise} & \textbf{Overall} \\
-\noalign{
-\tagmcbegin{artifact}
-\vspace{3pt}
-\hrule height 0.7pt
-\vspace{3pt}
-\tagmcend{}
-}
+\SetCell[r=2]{l} Objective & \SetCell[c=3]{c} Total Success Rate \\
+& Without Noise & With Noise & Overall \\
 Standard ($\alpha=0$) & $70.0\% \ (56/80)$ & $31.3\% \ (25/80)$ & $50.6\% \ (81/160)$ \\ 
 PAR ($\alpha = 0.5$) & $\mathbf{95.0\% \ (76/80)}$ & $\mathbf{75.0\% \ (60/80)}$ & $\mathbf{85.0\% \ (136/160)}$ \\ 
 PAR ($\alpha = 1.0$) & $85.0\% \ (68/80)$ & $61.3\% \ (49/80)$ & $73.1\% \ (117/160)$ \\ 
 A$2$P & $86.3\% \ (69/80)$ & $57.5\% \ (46/80)$ & $71.9\% \ (115/160)$ \\ 
 NRMDP & $67.5\% \ (54/80)$ & $37.5\% \ (30/80)$ & $52.5\% \ (84/160)$ \\
-\noalign{
-\tagmcbegin{artifact}
-\vspace{3pt}
-\hrule height 1.0pt
-\tagmcend{}
-}
-\end{tabular}
-\caption{Grasp Success Rates from Robotic Sorting Task.}
+\end{tblr}
+\caption[Grasp Success Rates from Robotic Sorting Task.]{Grasp Success Rates from Robotic Sorting Task.}
 \label{tab:grasp_success_rates}
 \end{table}
 
-The complete results for each seed without noise, with noise, and combined are shown in Tables \ref{tab:without_noise_results} \ref{tab:with_noise_results}, and \ref{tab:overall_noise_results}.
-
+The PAR objective with $\alpha=0.5$ achieved the best performance in both settings, executing $19$ more successful grasps than the second best objective and $55$ more successful grasps than the worst performing method. This result is consistent with the intended trade-off between performance and robustness, leading to high reward actions within high reward regions. Notably, standard RL fails to achieve the highest success rate even in the noiseless setting. This suggests that the PAR objective may be less prone to reward model exploitation, as it chooses wide regions rather than pure maxima that could be misestimated. The PAR objective with $\alpha=1.0$ achieved the third highest success rate without noise, but the second highest success rate with noise. This behavior matches the increased emphasis on robustness, potentially leading the policy to select actions that do not achieve the optimal reward but are located in regions where performance is less sensitive to perturbations. Although NRMDP and A$2$P showed improved robustness compared to standard RL, these methods remain vulnerable to inaccuracies in the learned reward model.
 \begin{table}[H]
-
 \centering
-\renewcommand{\arraystretch}{1.15}
-\setlength{\tabcolsep}{6pt}
-\begin{tabular}{lccccccccc}
-\noalign{
-\tagmcbegin{artifact}
-\hrule height 1.0pt
-\vspace{3pt}
-\tagmcend{}
+\begin{tblr}{
+  colspec={lccccccccc},
+  width=\textwidth,
+  hline{1,Z}={1pt},
+  hline{2,3}={0.7pt},
 }
-\multirow{2}{*}{\textbf{Objective}} & \multicolumn{8}{c}{\textbf{Successful Grasps per Seed}} & \multirow{2}{*}{\textbf{Total Success Rate}} \\
-\cline{2-9}
-& $\mathbf{S1}$ & $\mathbf{S2}$ & $\mathbf{S3}$ & $\mathbf{S4}$ & $\mathbf{S5}$ & $\mathbf{S6}$ & $\mathbf{S7}$ & $\mathbf{S8}$ & \\
-\noalign{
-\tagmcbegin{artifact}
-\vspace{3pt}
-\hrule height 0.7pt
-\vspace{3pt}
-\tagmcend{}
-}
+\SetCell[r=2]{l} Objective & \SetCell[c=8]{c} Successful Grasps per Seed & & & & & & & & \SetCell[r=2]{c} Total Success Rate \\
+& S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 \\
 Standard ($\alpha=0.0$) & $8$ & $9$ & $10$ & $4$ & $8$ & $2$ & $6$ & $9$ & $70.0\% \ (56/80)$ \\
 PAR ($\alpha=0.5$) & $10$ & $10$ & $9$ & $10$ & $10$ & $10$ & $9$ & $8$ & $\mathbf{95.0\% \ (76/80)}$ \\
 PAR ($\alpha=1.0$) & $10$ & $9$ & $10$ & $2$ & $10$ & $10$ & $8$ & $9$ & $85.0\% \ (68/80)$ \\
 A$2$P & $9$ & $9$ & $10$ & $10$ & $10$ & $6$ & $10$ & $5$ & $86.3\% \ (69/80)$ \\
 NRMDP & $9$ & $8$ & $10$ & $6$ & $6$ & $1$ & $9$ & $5$ & $67.5\% \ (54/80)$ \\
-\noalign{
-\tagmcbegin{artifact}
-\vspace{3pt}
-\hrule height 1.0pt
-\tagmcend{}
-}
-\end{tabular}
-\caption{Complete Grasp Success Rates for Actions without Noise.}
+\end{tblr}
+\caption[Complete Grasp Success Rates for Actions without Noise.]{Complete Grasp Success Rates for Actions without Noise.}
 \label{tab:without_noise_results}
 
 \end{table}
 \begin{table}[H]
 
 \centering
-\renewcommand{\arraystretch}{1.15}
-\setlength{\tabcolsep}{6pt}
-\begin{tabular}{lccccccccc}
-\noalign{
-\tagmcbegin{artifact}
-\hrule height 1.0pt
-\vspace{3pt}
-\tagmcend{}
+\begin{tblr}{
+  colspec={lccccccccc},
+  width=\textwidth,
+  hline{1,Z}={1pt},
+  hline{2,3}={0.7pt},
 }
-\multirow{2}{*}{\textbf{Objective}} & \multicolumn{8}{c}{\textbf{Successful Grasps per Seed}} & \multirow{2}{*}{\textbf{Total Success Rate}} \\
-\cline{2-9}
-& $\mathbf{S1}$ & $\mathbf{S2}$ & $\mathbf{S3}$ & $\mathbf{S4}$ & $\mathbf{S5}$ & $\mathbf{S6}$ & $\mathbf{S7}$ & $\mathbf{S8}$ & \\
-\noalign{
-\tagmcbegin{artifact}
-\vspace{3pt}
-\hrule height 0.7pt
-\vspace{3pt}
-\tagmcend{}
-}
+\SetCell[r=2]{l} Objective & \SetCell[c=8]{c} Successful Grasps per Seed & & & & & & & & \SetCell[r=2]{c} Total Success Rate \\
+& S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 \\
 Standard ($\alpha=0.0$) & $3$ & $4$ & $6$ & $1$ & $5$ & $0$ & $3$ & $3$ & $31.3\% \ (25/80)$ \\
 PAR ($\alpha=0.5$) & $8$ & $8$ & $4$ & $9$ & $9$ & $9$ & $5$ & $8$ & $\mathbf{75.0\% \ (60/80)}$ \\
 PAR ($\alpha=1.0$) & $8$ & $7$ & $7$ & $0$ & $9$ & $9$ & $3$ & $6$ & $61.3\% \ (49/80)$ \\
 A$2$P & $8$ & $7$ & $5$ & $6$ & $7$ & $6$ & $6$ & $1$ & $57.5\% \ (46/80)$ \\
 NRMDP & $7$ & $4$ & $8$ & $3$ & $3$ & $0$ & $3$ & $2$ & $37.5\% \ (30/80)$ \\
-\noalign{
-\tagmcbegin{artifact}
-\vspace{3pt}
-\hrule height 1.0pt
-\tagmcend{}
-}
-\end{tabular}
-\caption{Complete Grasp Success Rates for Actions with Noise.}
+\end{tblr}
+\caption[Complete Grasp Success Rates for Actions with Noise.]{Complete Grasp Success Rates for Actions with Noise.}
 \label{tab:with_noise_results}
 
 \end{table}
 \begin{table}[H]
 
 \centering
-\renewcommand{\arraystretch}{1.15}
-\setlength{\tabcolsep}{6pt}
-\begin{tabular}{lccccccccc}
-\noalign{
-\tagmcbegin{artifact}
-\hrule height 1.0pt
-\vspace{3pt}
-\tagmcend{}
+\begin{tblr}{
+  colspec={lccccccccc},
+  width=\textwidth,
+  hline{1,Z}={1pt},
+  hline{2,3}={0.7pt},
 }
-\multirow{2}{*}{\textbf{Objective}} & \multicolumn{8}{c}{\textbf{Successful Grasps per Seed}} & \multirow{2}{*}{\textbf{Total Success Rate}} \\
-\cline{2-9}
-& $\mathbf{S1}$ & $\mathbf{S2}$ & $\mathbf{S3}$ & $\mathbf{S4}$ & $\mathbf{S5}$ & $\mathbf{S6}$ & $\mathbf{S7}$ & $\mathbf{S8}$ & \\
-\noalign{
-\tagmcbegin{artifact}
-\vspace{3pt}
-\hrule height 0.7pt
-\vspace{3pt}
-\tagmcend{}
-}
+\SetCell[r=2]{l} Objective & \SetCell[c=8]{c} Successful Grasps per Seed & & & & & & & & \SetCell[r=2]{c} Total Success Rate \\
+& S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 \\
 Standard ($\alpha=0.0$) & $11$ & $13$ & $16$ & $5$ & $13$ & $2$ & $9$ & $12$ & $50.6\% \ (81/160)$ \\
 PAR ($\alpha=0.5$) & $18$ & $18$ & $13$ & $19$ & $19$ & $19$ & $14$ & $16$ & $\mathbf{85.0\% \ (136/160)}$ \\
 PAR ($\alpha=1.0$) & $18$ & $16$ & $17$ & $2$ & $19$ & $19$ & $11$ & $15$ & $73.1\% \ (117/160)$ \\
 A$2$P & $17$ & $16$ & $15$ & $16$ & $17$ & $12$ & $16$ & $6$ & $71.9\% \ (115/160)$ \\
 NRMDP & $16$ & $12$ & $18$ & $9$ & $9$ & $1$ & $12$ & $7$ & $52.5\% \ (84/160)$ \\
-\noalign{
-\tagmcbegin{artifact}
-\vspace{3pt}
-\hrule height 1.0pt
-\tagmcend{}
-}
-\end{tabular}
-\caption{Complete Grasp Success Rates for All Actions.}
+\end{tblr}
+\caption[Complete Grasp Success Rates for All Actions.]{Complete Grasp Success Rates for All Actions.}
 \label{tab:overall_noise_results}
 
 \end{table}
-
-% \subsection{Initial Dataset}
-% As mentioned earlier, the goal of the initial data collection phase is to produce a dataset with diverse states, actions, and rewards. To achieve this, data was collected from both an expert and a random policy to ensure a mix of successful and unsuccessful interactions. Expert data was generated by hand-guiding the KUKA collaborative robot to a variety of feasible grasp poses for the assigned object. With this teaching process, $160$ expert demonstrations were produced, corresponding to five demonstrations per state. Additionally, a random policy was implemented, sampling actions uniformly within the action bounds. Executing this policy yielded $340$ additional interactions with mainly unsuccessful attempts to provide negative reward examples. Together, the expert and random data form an initial dataset of $500$ interactions, containing both high quality grasps and exploration failures to produce an effective initial reward model.
 
 \end{document}

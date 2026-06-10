@@ -47,3 +47,24 @@ This causes the `Thesis_Jacob_Kruse.tex` file to compile automatically when any 
 If you run into issues, you can try to use the following command to clean the build directory before trying again.
 
     latexmk -C
+
+There is a possibility that the compilation will fail due to an overload of memory during tagging for PDF accessibility. If you get an error like the following,
+
+    {{array}{{[ \exp_not:n {/Nums [0 [ 14 0 R 15 0 R 16 0 R 17 0 R 18 0 R\ETC.
+    ! TeX capacity exceeded, sorry [main memory size=5000000].
+    <argument> ...686 0 R 1689 0 R 1690 0 R 1689 \ETC.
+
+you will need to increase the memory for tagging. You can do this by navigating to the following file.
+
+    %USERPROFILE%\AppData\Local\Programs\MiKTeX\miktex\config\texmfapp.ini
+
+In this file, increase the value for `main_memory` (9000000 should be enough).
+
+    ;; Words of inimemory available.
+    main_memory = 5000000
+
+After saving the file with the changes, you need to rebuild the configuration. Use the following command to do so.
+
+    initexmf --dump=pdflatex
+
+The PDF should compile after this. If it does not, you may need to increase the memory even more. If this still fails, you can always turn of the tagging by commenting out the `\DocumentMetadata` and `\hypersetup` blocks in `Thesis_Jacob_Kruse.tex` along with the `\tagmcbegin{artifact}` and `\tagmcend` lines in `chapter4.tex` and `chapter5.tex`. 

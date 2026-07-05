@@ -3,13 +3,24 @@
 % arara: pdflatex
 % arara: pdflatex
 
+% Thesis_Jacob_Kruse.tex: Added block to map 'Lbl' tags -> 'Span' tags to fix accessibility error, changed table for committee to 'tblr' environment to fix accessibility error
+
+% Thesis_Jacob_Kruse.pdf: Current version
+
+% /versions: Added 'Committee' version which was submitted to the committee for revisions (same as 'Preliminary_Submission' but w/o 'Dedication' or 'Acknowledgements'), added 'Doshi_Final' version which was the final version submitted to Dr. Doshi (same as 'Final' but w/o 'Dedication' or 'Acknowledgements'), and added 'Final' version which is the final version of my thesis (Same as current 'Thesis_Jacob_Kruse')
+
+% chapter5.tex: Modified tables to contain additional experimental data, modified robotic task description to reflect changes, added new configuration image, and added figure illustrating reward model exploitation
+
+% /Exploitation/*.png: Added three new images for the new figure
+
+% /Configurations/4.png: Added new image for workspace configuration figure
+
 \DocumentMetadata{
   tagging=on,
   tagging-setup={math/setup=mathml-SE},
   pdfstandard=UA-1,
   pdfversion=1.7,
   lang=en-US,
-  % testphase=phase-III
 }
 \documentclass[12pt, notitlepage, twoside]{report}
 
@@ -47,6 +58,35 @@
 
 % If you want sidenotes, we'll load some additional packages. Nothing for you to worry about.
 \input{metafiles/sidenotes.tex}
+
+% The following block fixed the Lbl error, but only for TOC numbers
+% \makeatletter
+% % Safeguard to ensure tagpdf commands are safely ignored if not initiated yet
+% \providecommand{\tagstructbegin}[1]{}
+% \providecommand{\tagstructend}{}
+% \providecommand{\tagmcbegin}[1]{}
+% \providecommand{\tagmcend}{}
+
+% % Redefining how hyperref outputs section numbers in the TOC
+% \renewcommand{\numberline}[1]{%
+%   \hb@xt@\@tempdima{%
+%     \tagmcend%
+%     \tagstructbegin{tag=Span}%  <- Manually forces the Span tag
+%     \tagmcbegin{tag=Span}%
+%     #1\hfil%
+%     \tagmcend%
+%     \tagstructend%
+%     \tagmcbegin{tag=Reference}% <- Restores container integrity
+%   }%
+% }
+% \makeatother
+
+% Force Adobe and other validators to map all structural Lbl tags to a Span role
+\ExplSyntaxOn
+\tagpdfsetup{
+  add-new-tag = {tag=Lbl, role=Span}
+}
+\ExplSyntaxOff
 
 \begin{document}
 
@@ -101,11 +141,15 @@ Bachelor of Science, Western Illinois University, 2024
 \vfill
 
 \begin{flushright}
-  \begin{tabular}{ll}
-    Major Professor: & Prashant Doshi \\ [8pt]
+  \begin{tblr}{
+    colspec={ll},
+    rowsep=0pt,
+    width=\textwidth,
+  }
+    Major Professor: & Prashant Doshi \\[8pt]
     Committee: & Mehmet Kurum \\
     & Jin Lu
-  \end{tabular}
+  \end{tblr}
 \end{flushright}
 
 \vspace*{3cm}
